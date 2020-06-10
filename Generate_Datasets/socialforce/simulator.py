@@ -1,10 +1,4 @@
 # coding=utf-8
-
-"""Synthetic pedestrian behavior according to the Social Force model.
-
-See Helbing and Molnár 1998.
-"""
-
 import numpy as np
 import math
 
@@ -12,11 +6,21 @@ from .potentials import PedPedPotential
 from .fieldofview import FieldOfView
 from . import stateutils
 
+# ============================================= Description =============================================
+# Synthetic pedestrian behavior according to the Social Force model.
+#
+# For a detailed description of the Social Force Model see:
+# D. Helbing and P. Monlar. “Social Force Model for Pedestrian Dynamics”. In: Physical Review 51.5 (1995).
+#
+# Link to respective work: https://journals.aps.org/pre/abstract/10.1103/PhysRevE.51.4282
+# =======================================================================================================
+
 MAX_SPEED_MULTIPLIER = 1.3  # with respect to initial speed
 
 
 class Simulator(object):
-    """Simulate social force model.
+    """
+    Simulate social force model.
 
     Main interface is the state. Every pedestrian is an entry in the state and
     represented by a vector (x, y, v_x, v_y, d_x, d_y, [tau]).
@@ -40,11 +44,11 @@ class Simulator(object):
                 tau = tau * np.ones(self.state.shape[0])
             self.state = np.concatenate((self.state, np.expand_dims(tau, -1)), axis=-1)
 
-        # potentials
+        # Repulsive potentials
         self.V = PedPedPotential(self.delta_t, v0=v0, sigma=sigma)
         self.U = ped_space
 
-        # field of view
+        # Field of view
         self.w = FieldOfView()
 
     def f_ab(self):
@@ -64,18 +68,23 @@ class Simulator(object):
         return desired_velocity * np.expand_dims(factor, -1)
 
     def step(self):
-        """Do one step in the simulation and update the state in place."""
+        """
+        Do one step in the simulation and update the state in place.
+        """
         # accelerate to desired velocity
         e = stateutils.desired_directions(self.state)
         vel = self.state[:, 2:4]
         tau = self.state[:, 6:7]
-        F0 = 1.0 / tau * (np.expand_dims(self.initial_speeds, -1) * e - vel)            # Acceleration term towards final destination
 
-        # repulsive terms between pedestrians
+        # Acceleration term towards final destination
+        F0 = 1.0 / tau * (np.expand_dims(self.initial_speeds, -1) * e - vel)
+
+        # Repulsive force terms between pedestrians
         f_ab = self.f_ab()
         w = np.expand_dims(self.w(e, -f_ab), -1)
         F_ab = w * f_ab
 
+        # Split force between pedestrians into components parallel and orthogonal to the current direction of movement
         rotation = np.array([[0, -1], [1, 0]])
         F_ab_total = np.sum(F_ab, axis=1)
         F_ab_orth = np.transpose(np.dot(rotation, np.transpose(F_ab_total)))
@@ -86,25 +95,27 @@ class Simulator(object):
 
         F_ab = self.beta*F_ab_total + (1-self.beta)*F_ab_orth
 
-        # repulsive terms between pedestrians and boundaries
+        # Repulsive force terms between pedestrians and boundaries
         F_aB = self.f_aB()
 
-        # social force
+        # Social force
         F = F0 + F_ab + np.sum(F_aB, axis=1)
-        # desired velocity
+        # Desired velocity
         w = self.state[:, 2:4] + self.delta_t * F
-        # velocity
+        # Final Velocity
         v = self.capped_velocity(w)
 
-        # update state
+        # Update state
         self.state[:, 0:2] += v * self.delta_t
         self.state[:, 2:4] = v
 
         return self
 
-    def calc_force(self, new_state):
-        """Do one step in the simulation and update the state in place."""
-        # accelerate to desired velocity
+    def calc_force_between_pedestrians(self, new_state):
+        """
+        Calculate the resulting force between pedestrians (in order to visualize social interactions)
+        """
+        # Accelerate to desired velocity
         e = stateutils.desired_directions(new_state)
 
         # repulsive terms between pedestrians
