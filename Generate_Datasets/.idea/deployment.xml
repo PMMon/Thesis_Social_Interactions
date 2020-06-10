@@ -5,7 +5,7 @@
       <paths name="mondorf@atcremers10.informatik.tu-muenchen.de:58022">
         <serverdata>
           <mappings>
-            <mapping deploy="/usr/stud/mondorf/socialforce" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/usr/stud/mondorf/BAThesis_SocInt/Generate_Datasets" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
