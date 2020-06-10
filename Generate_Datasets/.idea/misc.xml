@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="JavaScriptSettings">
-    <option name="languageLevel" value="ES6" />
-  </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Remote Python 3.6.2 (sftp://mondorf@atcremers10.informatik.tu-muenchen.de:58022/usr/stud/mondorf/.pyenv/versions/3.6.2/envs/venv-3.6.2/bin/python3.6)" project-jdk-type="Python SDK" />
-</project>
