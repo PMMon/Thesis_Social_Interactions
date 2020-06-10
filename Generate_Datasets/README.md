@@ -42,7 +42,7 @@ python main/GenPedPedScene.py --V0 2 --sigma 1.303 --scenario square --show_anim
 ```
 
 Note that if the argument `--show_potential` is set to `True`, the *repulsive potential* between the pedestrians in a scene will be visualized in the animation. This requires comparable high computational costs.
-The animations can be found under <pre>docs/videos/PedPedScene/*datasetname*</pre>. 
+The animations can be found under <code>docs/videos/PedPedScene/*datasetname*</code>. 
 
 ## Datasets comprising Human-Space Interactions
 
@@ -79,7 +79,7 @@ To create an animation of the generated datasets run the script as follows:
 python main/GenPedSpaceScene.py --V0 2 --sigma 0.8686 --U0 3 --r 0.4343 --scenario zara1 --show_animation True
 ```
 
-The animations can be found under <pre>docs/videos/PedSpaceScene/*datasetname*</pre>. 
+The animations can be found under <code>docs/videos/PedSpaceScene/*datasetname*</code>. 
 
 
 
