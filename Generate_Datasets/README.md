@@ -1,6 +1,6 @@
 # Generate Datasets
 
-The scripts in this folder allow you to generation synthetic datasets with the Social Force Model [[1]](#1) that either: 
+The scripts in this folder allow you to generate synthetic datasets with the Social Force Model [[1]](#1) that either: 
 
 * Focus on the social interactions between pedestrians and exclude human-space interactions
 * Comprise human-space interactions in addition to human-human interactions
@@ -42,7 +42,7 @@ python main/GenPedPedScene.py --V0 2 --sigma 1.303 --scenario square --show_anim
 ```
 
 Note that if the argument `--show_potential` is set to `True`, the *repulsive potential* between the pedestrians in a scene will be visualized in the animation. This requires comparable high computational costs.
-The animations can be found under `docs/videos/PedPedScene/`*`datasetname`*. 
+The animations can be found under <pre>docs/videos/PedPedScene/*datasetname*</pre>. 
 
 ## Datasets comprising Human-Space Interactions
 
@@ -79,7 +79,7 @@ To create an animation of the generated datasets run the script as follows:
 python main/GenPedSpaceScene.py --V0 2 --sigma 0.8686 --U0 3 --r 0.4343 --scenario zara1 --show_animation True
 ```
 
-The animations can be found under `docs/videos/PedSpaceScene/`*`datasetname`*. 
+The animations can be found under <pre>docs/videos/PedSpaceScene/*datasetname*</pre>. 
 
 
 
