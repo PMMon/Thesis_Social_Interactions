@@ -1,8 +1,17 @@
 import numpy as np
 
+# ============================================= Description =============================================
+# Classes that define the initial states of agents in the dataset.
+# The agents either enter the scenario randomly at one side of the environment and leave it at another randomly
+# selected side (class random_initialization) or the agents meet at the center of the scenario (class meeting)
+# =======================================================================================================
+
 class dataset_characterisitcs:
-    def __init__(self, dataset, a, b):
-        if dataset == "zara1":
+    """
+    Defines the spatial configurations for different scenarios - x_min & x_max/y_min & y_max determine the entry and exit areas of the agents for the respective sides of the scenario
+    """
+    def __init__(self, scenario, a, b):
+        if scenario == "zara1":
             self.left_side = {"x_min": 0, "x_max": 0, "y_min": 4, "y_max": 12}
             self.top = {"x_min": 7.5, "x_max": 15, "y_min": 12, "y_max": 12}
             self.right_side = {"x_min": 15, "x_max": 15, "y_min": 6, "y_max": 12}
@@ -12,7 +21,7 @@ class dataset_characterisitcs:
             self.total_y_min = min(self.left_side["y_min"], self.top["y_min"], self.right_side["y_min"])
             self.total_y_max = max(self.left_side["y_max"], self.top["y_max"], self.right_side["y_max"])
 
-        elif dataset == "zara2":
+        elif scenario == "zara2":
             self.left_side = {"x_min": 0, "x_max": 0, "y_min": 3.9, "y_max": 11.5}
             self.top = {"x_min": 7.8, "x_max": 14, "y_min": 12, "y_max": 12}
             self.right_side = {"x_min": 14, "x_max": 14, "y_min": 5.5, "y_max": 12}
@@ -22,7 +31,7 @@ class dataset_characterisitcs:
             self.total_y_min = min(self.left_side["y_min"], self.top["y_min"], self.right_side["y_min"])
             self.total_y_max = max(self.left_side["y_max"], self.top["y_max"], self.right_side["y_max"])
 
-        elif dataset == "univ":
+        elif scenario == "univ":
             self.left_side = {"x_min": -2.5, "x_max": -2.5, "y_min": 0, "y_max": 8}
             self.top = {"x_min": 12.5, "x_max": 15, "y_min": 14, "y_max": 14}
             self.right_side = {"x_min": 15, "x_max": 15, "y_min": 0, "y_max": 14}
@@ -32,7 +41,7 @@ class dataset_characterisitcs:
             self.total_y_min = min(self.left_side["y_min"], self.top["y_min"], self.right_side["y_min"], self.bottom["y_min"])
             self.total_y_max = max(self.left_side["y_max"], self.top["y_max"], self.right_side["y_max"], self.bottom["y_max"])
 
-        elif dataset == "hotel":
+        elif scenario == "hotel":
             self.left_side = {"x_min": 0, "x_max": 0, "y_min": 6, "y_max": 12}
             self.top = {"x_min": 0, "x_max": 8, "y_min": 13, "y_max": 13}
             self.right_side = {"x_min": 14, "x_max": 14, "y_min": 6, "y_max": 12}
@@ -42,7 +51,7 @@ class dataset_characterisitcs:
             self.total_y_min = min(self.left_side["y_min"], self.top["y_min"], self.right_side["y_min"])
             self.total_y_max = max(self.left_side["y_max"], self.top["y_max"], self.right_side["y_max"])
 
-        elif dataset == "eth":
+        elif scenario == "eth":
             self.left_side = {"x_min": 0, "x_max": 0, "y_min": 22, "y_max": 25}
             self.right_side = {"x_min": 22, "x_max": 22, "y_min": 22, "y_max": 25}
             self.top = {"x_min": 4.5, "x_max": 15, "y_min": 25, "y_max": 25}
@@ -52,7 +61,7 @@ class dataset_characterisitcs:
             self.total_y_min = min(self.bottom["y_min"], self.top["y_min"], self.left_side["y_min"], self.right_side["y_min"])
             self.total_y_max = max(self.bottom["y_max"], self.top["y_max"], self.left_side["y_max"], self.right_side["y_max"])
 
-        elif dataset == "square":
+        elif scenario == "square":
             self.left_side = {"x_min": -a/2, "x_max": -a/2, "y_min": -a/2, "y_max": a/2}
             self.top = {"x_min": -a/2, "x_max": a/2, "y_min": a/2, "y_max": a/2}
             self.right_side = {"x_min": a/2, "x_max": a/2, "y_min": -a/2, "y_max": a/2}
@@ -62,7 +71,7 @@ class dataset_characterisitcs:
             self.total_y_min = min(self.left_side["y_min"], self.top["y_min"], self.right_side["y_min"],self.bottom["y_min"])
             self.total_y_max = max(self.left_side["y_max"], self.top["y_max"], self.right_side["y_max"],self.bottom["y_max"])
 
-        elif dataset == "rectangle":
+        elif scenario == "rectangle":
             self.left_side = {"x_min": -a / 2, "x_max": -a / 2, "y_min": -b / 2, "y_max": b / 2}
             self.top = {"x_min": -a / 2, "x_max": a / 2, "y_min": b / 2, "y_max": b / 2}
             self.right_side = {"x_min": a / 2, "x_max": a / 2, "y_min": -b / 2, "y_max": b / 2}
@@ -73,16 +82,27 @@ class dataset_characterisitcs:
             self.total_y_max = max(self.left_side["y_max"], self.top["y_max"], self.right_side["y_max"],self.bottom["y_max"])
 
         else:
-            raise ValueError("Please choose valid dataset. Given dataset: " + str(dataset) + " not known!")
+            raise ValueError("Please choose valid dataset. Given dataset: " + str(scenario) + " not known!\nPlease choose either zara1, zara2, univ, hotel, eth, square or rectangle!")
+
 
 class random_initialization(dataset_characterisitcs):
-    def __init__(self, dataset, v_max, v_min, a, b, tau):
+    """
+    Agents enter the scenario at one randomly selected side and leave it at another randomly selected side.
+    The location where they enter and leave the scenario on the respective sides is randomly defined according to a uniform distribution.
+    The direction of the initial velocity is chosen according to the direction of the goal of each agent. The magnitude is randomly defined using
+    the uniform distribution U[v_min, v_max].
+    """
+    def __init__(self, scenario, v_max, v_min, a, b, tau):
         self.v_max = v_max
         self.v_min = v_min
         self.tau = tau
-        super(random_initialization,self).__init__(dataset, a, b)
+        super(random_initialization,self).__init__(scenario, a, b)
+
 
     def choose_starting_points(self, side):
+        """
+        Define specific location on side
+        """
         # Left Side
         if side == 1:
             x = np.random.uniform(self.left_side["x_min"], self.left_side["x_max"])
@@ -104,30 +124,13 @@ class random_initialization(dataset_characterisitcs):
 
         return x, y
 
-    def get_initial_vel(self, side):
-        # Left Side
-        if side == 1:
-            v_x = np.random.uniform(self.v_min, self.v_max)
-            v_y = np.random.uniform(-self.v_max, self.v_max)
-        # Bottom
-        elif side == 2:
-            v_x = np.random.uniform(-self.v_max, self.v_max)
-            v_y = np.random.uniform(self.v_min, self.v_max)
-        # Right Side
-        elif side == 3:
-            v_x = np.random.uniform(-self.v_max, -self.v_min)
-            v_y = np.random.uniform(-self.v_max, self.v_max)
-        # Top
-        elif side == 4:
-            v_x = np.random.uniform(-self.v_max, self.v_max)
-            v_y = np.random.uniform(-self.v_max, -self.v_min)
-        else:
-            raise ValueError("Invalid number for sides!")
 
-        return v_x, v_y
-
-    def initialize_state(self, i):
-        # select input & output side
+    def initialize_state(self, i=0):
+        """
+        Define the initial state of an agent
+        :return: initial state of agent
+        """
+        # select entry & exit side
         sides = []
         if not not self.left_side:
             sides.append(1)
@@ -142,9 +145,8 @@ class random_initialization(dataset_characterisitcs):
         input = sides[0]
         output = sides[1]
 
-        # defining sides of square
+        # Specifying particular entry and exit location for the respective sides
         x, y = self.choose_starting_points(input)
-        #v_x, v_y = self.get_initial_vel(input)
         d_x, d_y = self.choose_starting_points(output)
 
         # get initial velocity in direction of destination
@@ -155,14 +157,21 @@ class random_initialization(dataset_characterisitcs):
 
         return np.array([[x, y, v_x, v_y, d_x, d_y, self.tau]])
 
+
 class meeting(dataset_characterisitcs):
-    def __init__(self, dataset, v_max, v_min, a, b, tau):
+    """
+    This class represents a scenario in which agents meet at the center of a square.
+    """
+    def __init__(self, scenario, v_max, v_min, a, b, tau):
         self.v_max = v_max
         self.v_min = v_min
         self.tau = tau
-        super(meeting,self).__init__(dataset, a, b)
+        super(meeting,self).__init__(scenario, a, b)
 
     def choose_starting_points(self, agent):
+        """
+        Define specific location on entry/exit side.
+        """
         # Left Side
         if agent % 4 == 1:
             if self.left_side["x_max"] != self.left_side["x_min"]:
@@ -208,29 +217,12 @@ class meeting(dataset_characterisitcs):
 
         return x, y
 
-    def get_initial_vel(self, agent):
-        # Left Side
-        if agent % 4 == 1:
-            v_x = 0.8       # np.random.uniform(self.v_min, self.v_max)
-            v_y = 0.001
-        # Right Side
-        elif agent % 4 == 2:
-            v_x = 0.8       # np.random.uniform(-self.v_max, -self.v_min)
-            v_y = 0.001
-        # Top
-        elif agent % 4 == 3:
-            v_x = 0.001
-            v_y = 0.8       # np.random.uniform(-self.v_max, -self.v_min)
-        # Bottom
-        elif agent % 4 == 0:
-            v_x = 0.001
-            v_y = 0.8       # np.random.uniform(self.v_min, self.v_max)
-        else:
-            raise ValueError("Invalid number for sides!")
-
-        return v_x, v_y
 
     def initialize_state(self, agent):
+        """
+        Define the initial state of an agent for the meeting scenario
+        :return: initial state of agent
+        """
         # select input & output side
         input = agent
 
@@ -247,21 +239,29 @@ class meeting(dataset_characterisitcs):
 
         # defining sides of square
         x, y = self.choose_starting_points(input)
-        v_x, v_y = self.get_initial_vel(input)
         d_x, d_y = self.choose_starting_points(output)
 
+        # get initial velocity in direction of destination
+        distance = np.array([d_x, d_y]) - np.array([x, y])
+        v =  0.8 * (distance/np.linalg.norm(distance))
+        v_x = v[0]
+        v_y = v[1]
+
+        # Define small offset >= 0 for location on sides such that the agents do not exactly crash into each other
+        offset = 0
+
         if agent % 4 == 0:
-            y += 0          #0.2
-            d_y += 0        # 0.2
+            y += offset
+            d_y += offset
         elif agent % 4 == 1:
-            y -= 0          # 0.2
-            d_y -= 0        # 0.2
+            y -= offset
+            d_y -= offset
         elif agent % 4 == 2:
-            x += 0          #0.2
-            d_x += 0        #0.2
+            x += offset
+            d_x += offset
         elif agent % 4 == 3:
-           x -= 0           #0.2
-           d_x -= 0         #0.2
+           x -= offset
+           d_x -= offset
         else:
             raise ValueError("Invalid number for sides!")
 
