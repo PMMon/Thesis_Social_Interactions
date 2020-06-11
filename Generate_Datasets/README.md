@@ -48,7 +48,7 @@ The animations can be found under <code>docs/videos/PedPedScene/*datasetname*</c
 
 <img src= "ReadMeSupport/PedSpace_Animations/Zara01_scenario.gif" width = "350" height = "250"> | <img src= "ReadMeSupport/PedSpace_Animations/Zara01_scenario_simulated.gif" width = "350" height = "250">
 :-------------------------:|:-------------------------:
-Snippet from real-world ZARA01 scenario [[2]](#2)          |  Snippet from simulated ZARA01 scenario
+Snippet from real-world ZARA1 scenario [[2]](#2)          |  Snippet from simulated ZARA1 scenario
 
 It is also possible to generate datasets that take the interactions between pedestrians and surrounding obstacles into account. As described in detail in chapter 4.2.2 of the [thesis](../Bachelor_Thesis_Philipp_Mondorf.pdf), it is possible to read in a segmented image of a real-world scenario like [this](docs/real_scene_images/zara1-op.jpg) in order to obtain the boundaries of obstacles for the dataset that you want to generate. 
 
