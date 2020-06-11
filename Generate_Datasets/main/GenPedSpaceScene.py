@@ -29,11 +29,11 @@ parser = argparse.ArgumentParser("Generate datasets that include human-space int
 
 # General Configs
 parser.add_argument("--run_list", default=False, type=bool_flag, help="Determine whether to run simulation for various values of V0 and sigma defined in two lists")
-parser.add_argument("--scenario", default="hotel", type=str, help="Specify name of scenario that should be animated. Choose either zara1, zara2, univ, hotel or eth")
 parser.add_argument("--nr_scenes", default=100, type=int, help="Specify number of scenes")
+parser.add_argument("--scenario", default="zara1", type=str, help="Specify name of scenario that should be animated. Choose either zara1, zara2, univ, hotel or eth")
 parser.add_argument("--phase", default="train", type=str, help="Specify for which phase data should be created. Choose either train, val or test")
-parser.add_argument("--a", default=20., type=float, help="Specify width of scene")
-parser.add_argument("--b", default=25., type=float, help="Specify height of scene")
+parser.add_argument("--a", default=20., type=float, help="Specify width of square/rectangle")
+parser.add_argument("--b", default=30., type=float, help="Specify length of rectangle")
 parser.add_argument("--threshold", default=0.02, type=float, help="Specify threshold for agents getting out of scene")
 
 # Configs for initial State
@@ -42,22 +42,27 @@ parser.add_argument("--v_max", default=1.2, type=float, help="Specify v_max of a
 parser.add_argument("--v_min", default=0.4, type=float, help="Specify v_min of agents in scenes")
 
 # Configs for Potential and Forces
-parser.add_argument("--V0", default=-1, type=int, help="Specify magnitude V0 of agent-agent potential")
-parser.add_argument("--sigma", default=-1.0, type=float, help="Specify range of agent-agent potential")
-parser.add_argument("--U0", default=4, type=int, help="Specify magnitude U0 of agent-obstacle potential")
-parser.add_argument("--r", default=2.0, type=float, help="Specify range of agent-obstacle potential")
+parser.add_argument("--V0", default=2, type=int, help="Specify magnitude V0 of agent-agent potential")
+parser.add_argument("--sigma", default=0.8686, type=float, help="Specify range of agent-agent potential")
+parser.add_argument("--U0", default=2, type=int, help="Specify magnitude U0 of agent-obstacle potential")
+parser.add_argument("--r", default=0.4343, type=float, help="Specify range of agent-obstacle potential")
+parser.add_argument("--tau", default=0.5, type=float, help="Specify relaxation time")
+parser.add_argument("--beta", default=1, type=float, help="Specify factor for orthogonal force ratio (1 for none)")
+parser.add_argument("--delta_t", default=0.4, type=float, help="Specify time for step size")
+parser.add_argument("--twophi", default=200.0, type=float, help="Specify angle for visible range")
+parser.add_argument("--c", default=0.5, type=float, help="Specify out-of-view factor")
 
 # Configs for animation of dataset
-parser.add_argument("--create_background", default=False, type=bool_flag, help="Determine whether to show and save created background space for simulation")
 parser.add_argument("--show_animation", default=False, type=bool_flag, help="Determine whether to create an mp4-video of the created sequence")
 parser.add_argument("--show_potentials", default=False, type=bool_flag, help="Specify whether to plot potentials")
-parser.add_argument("--scaling", default=0.05, type=float, help="Specify scaling factor to map pixel of input image to coordinates of scene")
 parser.add_argument("--agent_radius", default=0.35, type=float, help="Specify radius of circles that represent the agents in the dataset")
+parser.add_argument("--create_background", default=False, type=bool_flag, help="Determine whether to show and save created background space for simulation")
+parser.add_argument("--scaling", default=0.05, type=float, help="Specify scaling factor to map pixel of input image to coordinates of scene")
 
 # Configs about Visdom
-parser.add_argument("--visdom", default=False, type=bool_flag, help="specify whether plot loss in visdom")
+parser.add_argument("--visdom", default=False, type=bool_flag, help="specify whether show animations/images in visdom")
 parser.add_argument("--viz_port", default=8098, type=int, help="specify port for visdom")
-parser.add_argument("--viz_server", default="http://atcremers10", type=str, help="specify server for visdom")
+parser.add_argument("--viz_server", default="", type=str, help="specify server for visdom")
 parser.add_argument("--viz_env", default="Socialforce_PedSpaceScene", type=str, help="Specify environment name for visdom")
 
 
