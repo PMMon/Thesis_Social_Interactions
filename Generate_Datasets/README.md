@@ -16,7 +16,7 @@ impact of social interactions on the motion of pedestrians. For this, we specify
 
 ### Generate Dataset
 
-To generate datasets that exclusively focus on the interactions between pedestrians, run the script `main/GenPedPedScene.py`. A detailed explanation of the possible arguments can be found [here](./ARGUMENTS.md). For example to generate a dataset on which you can experiment with your trajectory prediction models, run the script like this:
+To generate datasets that exclusively focus on the interactions between pedestrians, run the script `main/GenPedPedScene.py`. A detailed explanation of the possible arguments can be found [here](./ARGUMENTS_PEDPED.md). For example to generate a dataset on which you can experiment with your trajectory prediction models, run the script like this:
 
 ```
 python main/GenPedPedScene.py --V0 2 --sigma 1.303 --scenario square
@@ -54,7 +54,7 @@ It is also possible to generate datasets that take the interactions between pede
 
 ### Generate Dataset 
 
-To generate datasets that take human-space interactions into account, run the script `main/GenPedSpaceScene.py`.  A detailed explanation of the possible arguments can be found [here](./ARGUMENTS.md). 
+To generate datasets that take human-space interactions into account, run the script `main/GenPedSpaceScene.py`.  A detailed explanation of the possible arguments can be found [here](./ARGUMENTS_PEDSPACE.md). 
 For example to generate a dataset on which you can experiment with your trajectory prediction models, run the script like this:
 
 ```
@@ -85,6 +85,6 @@ The animations can be found under <code>docs/videos/PedSpaceScene/*datasetname*<
 
 
 ## References
-<a id="1">[1]</a>  D. Helbing and P. Monlar. “Social Force Model for Pedestrian Dynamics”. In: *Physical Review* 51.5 (1995).
+<a id="1">[1]</a>  D. Helbing and P. Molnár. “Social Force Model for Pedestrian Dynamics”. In: *Physical Review* 51.5 (1995).
 
 <a id="2">[2]</a> A. Lerner, Y. Chrysanthou and D. Lischinski: „Crowds by Example“. In: *Comput. Graph. Forum* 26 (2007).
