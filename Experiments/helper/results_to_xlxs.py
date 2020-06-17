@@ -1,7 +1,21 @@
 import os
 import pandas as pd
 
+# ========================= Description ===========================
+# Functions to write losses or other values to .xlsx-files for
+# further analysis
+# =================================================================
+
 def note_best_val(filepath, args, best_val, best_val_FDE, best_val_epoch):
+    """
+    Writes best validation loss of model on dataset to .xlsx-file.
+    :param filepath: Path to .xlsx-output-file
+    :param args: Command-line arguments
+    :param best_val: Best/lowest validation ADE of model on dataset
+    :param best_val_FDE: Best/lowest validation FDE of model on dataset
+    :param best_val_epoch: Number of epoch in which lowest ADE was measured
+    :return:
+    """
     if os.path.exists(filepath):
         df = pd.read_excel(filepath)
         if ((df["lr"] == args.lr) & (df["wd"] == args.wd) & (df["dropout"] == args.dropout) & (df["batch_size"] == args.batch_size) & (df["enc_h_dim"] == args.encoder_h_dim) & (df["dec_h_dim"] == args.decoder_h_dim) & (df["emb_dim"] == args.emb_dim)).any():
@@ -27,12 +41,20 @@ def note_best_val(filepath, args, best_val, best_val_FDE, best_val_epoch):
     df.to_excel(writer)
     writer.save()
 
+
 def note_test_results_for_socialforce(filepath, args, ADE_loss, FDE_loss):
+    """
+    Writes overall ADE and FDE of model on dataset to .xlsx-file
+    :param filepath: Path to .xlsx-output-file
+    :param args: Command-line arguments
+    :param ADE_loss: Overall ADE of model
+    :param FDE_loss: Overall FDE of model
+    """
+
     if os.path.exists(filepath):
         df = pd.read_excel(filepath)
         if ((df["Phase"] == args.phase) & (df["V0"] == args.V0) & (df["sigma"] == args.sigma)).any():
-            #if df["ADE"][(df["Phase"] == args.phase) & (df["V0"] == args.V0) & (df["sigma"] == args.sigma)].any() > ADE_loss:
-            # update: always overwrite result
+            # always overwrite result
             df.loc[(df["Phase"] == args.phase) & (df["V0"] == args.V0) & (df["sigma"] == args.sigma), "ADE"] = [ADE_loss]
             df.loc[(df["Phase"] == args.phase) & (df["V0"] == args.V0) & (df["sigma"] == args.sigma), "FDE"] = [FDE_loss]
         else:
@@ -51,11 +73,20 @@ def note_test_results_for_socialforce(filepath, args, ADE_loss, FDE_loss):
     df.to_excel(writer2)
     writer2.save()
 
+
 def note_nonlinear_loss(filepath, args, ADE_loss, ADE_nonlinear):
+    """
+    Write nonlinear ADE of model to .xlsx-file
+    :param filepath: Path to .xlsx-output-file
+    :param args: Command-line arguments
+    :param ADE_loss: Overall ADE of model on dataset
+    :param ADE_nonlinear: Nonlinear ADE of model on dataset for threshold
+    """
+
     if os.path.exists(filepath):
         df = pd.read_excel(filepath)
         if ((df["model_type"] == args.model_type) & (df["threshold"] == args.threshold_nl) & (df["padding"] == args.padding) & (df["final_displ"] == args.final_position) & (df["V0"] == args.V0) & (df["sigma"] == args.sigma)).any():
-            # update: always overwrite result
+            # always overwrite result
             df.loc[(df["model_type"] == args.model_type) & (df["threshold"] == args.threshold_nl) & (df["final_displ"] == args.final_position) & (df["padding"] == args.padding) & (df["V0"] == args.V0) & (df["sigma"] == args.sigma), "ADE_nonlinear"] = [ADE_nonlinear]
             df.loc[(df["model_type"] == args.model_type) & (df["threshold"] == args.threshold_nl) & (df["final_displ"] == args.final_position) & (df["padding"] == args.padding) & (df["V0"] == args.V0) & (df["sigma"] == args.sigma), "ADE"] = [ADE_loss]
         else:
@@ -71,6 +102,7 @@ def note_nonlinear_loss(filepath, args, ADE_loss, ADE_nonlinear):
     writer2 = pd.ExcelWriter(filepath, engine="xlsxwriter")
     df.to_excel(writer2)
     writer2.save()
+
 
 def loss_nonlinear_trajectories(path, args, loss_dict):
     file_name = "nl_traj_ADE_" + args.model_type
@@ -110,14 +142,24 @@ def loss_nonlinear_trajectories(path, args, loss_dict):
     df.to_excel(writer2)
     writer2.save()
 
-def loss_nonlinear_trajectories_coarse(path, args, loss_dict):
-    file_name = "nl_traj_ADE_coarse_" + args.dataset_name + ".xlsx"
 
-    filepath = path+"//"+file_name
-
+def loss_on_traj_class(path, args, loss_dict):
+    """
+    Writes ADE and FDE of trajectory prediction models on classified trajectories into .xlsx-file. The following information is passed
+    to the .xlsx-file:
+    ADE on traj-class | FDE on traj-class | was information about destination of ped passed to model (True/False) | traj-class | gs (grid-size) | ns (neigh.-size) |
+    model type| was data padded (True/False) | number of trajectories of class | total number of classified trajectories
+    :param path: Path where .xlsx-file is stored
+    :param args: Command-line arguments
+    :param loss_dict: Dictionary with information about losses
+    """
     if not os.path.exists(path):
         os.makedirs(path)
 
+    file_name = "loss_classified_traj_" + args.dataset_name + ".xlsx"
+    filepath = os.path.join(path, file_name)
+
+    # Write loss to file
     if os.path.exists(filepath):
         df = pd.read_excel(filepath)
         for group, value_dict in loss_dict.items():
@@ -133,13 +175,9 @@ def loss_nonlinear_trajectories_coarse(path, args, loss_dict):
             if group == "strictly_linear":
                 continue
             df = df.append(pd.DataFrame({"group": group, "model_type": args.model_type, "padding": args.padding, "final_displ": args.final_position, "ns": args.neighborhood_size, "gs": args.grid_size, "ADE_nonlinear": value_dict["ADE_nonlinear"], "FDE_nonlinear": value_dict["FDE_nonlinear"], "nr_traj": value_dict["nr_traj"], "total_nr_traj": value_dict["total_nr_traj"]}, index=[0]), ignore_index=True, sort=True)
-        #df = df.append(pd.DataFrame({"group": "Total", "nr_traj": value_dict["total_nr_traj"]}, index=[0]), ignore_index=True, sort=True)
 
     df.drop(df.columns[df.columns.str.contains('unnamed', case=False)], axis=1, inplace=True)
 
     writer2 = pd.ExcelWriter(filepath, engine="xlsxwriter")
     df.to_excel(writer2)
     writer2.save()
-
-if __name__ == "__main__":
-    print("main script")
