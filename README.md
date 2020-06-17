@@ -60,7 +60,8 @@ There exists a variety of publicly available datasets of real-world human trajec
 ### Synthetic Datasets
 Instructions for generating hand-tailored datasets that focus on the interactions between pedestrians can be found under [Generate_Datasets](Generate_Datasets).
 
-<img src= "Generate_Datasets/ReadMeSupport/PedPed_Animations/V01b0u2171.PNG" width = "380" height = ""> | <img src= "Generate_Datasets/ReadMeSupport/PedPed_Animations/V03b1u4427.PNG" width = "380" height = "">
+<img src= "Generate_Datasets/ReadMeSupport/PedPed_Animations/V01b0u2171.PNG" width = "380" height = ""> | <img src= "Generate_Datasets/ReadMeSupport/PedPed_Animations/V03b1u4427.PNG" width = "380" height = ""> 
+:-------------------------:|:-------------------------:
 
 ## Experiments
 Instructions for training and evaluating different trajectory prediction models on real and synthetic datasets can be found under [Experiments](Experiments).
