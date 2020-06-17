@@ -4,10 +4,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from numpy.linalg import inv
-
 import cv2
 
 root_path = Path(os.path.realpath(__file__)).parent.parent
+
+# ============================ Description ==============================
+# Specifications for particular real and synthetic datasets,
+# such as paths to train, val and test files, homography matrices, etc.
+# =======================================================================
 
 def read_file(_path, delim='\t'):
     data = []
@@ -23,7 +27,9 @@ def read_file(_path, delim='\t'):
     return np.asarray(data)
 
 class Experiment:
-    """The experiment objects store mainly paths to train and testfiles as well as homography matrices"""
+    """
+    The experiment objects store mainly paths to train and testfiles as well as homography matrices
+    """
     def __init__(self):
         super(Experiment, self).__init__( )
 
@@ -39,8 +45,6 @@ class Experiment:
         self.H = []
         self.homography = []
 
-
-
         self.scaling = 0.05
         self.get_name()
         self.data_path = root_path / 'datasets' /self.name
@@ -52,40 +56,49 @@ class Experiment:
     def get_name(self):
         self.name = self.__class__.__name__
 
+
     def set_phase(self, phase):
         self.phase
+
 
     def get_file_path(self, phase):
         if phase == "test":
             self.dataDir = self.test_dir
-
         elif phase == "train":
             self.dataDir = self.train_dir
-
         elif phase == "val":
             self.dataDir = self.val_dir
         else:
             raise AssertionError('"phase" must be either train, val or test.')
-        return str(self.dataDir)
-    def init_args_dict(self):
 
+        return str(self.dataDir)
+
+
+    def init_args_dict(self):
         self.args_dict = {}
+
         for item in self.args:
             self.args_dict[item] = getattr(self, item)
+
 
     def get_dataset_args(self):
         #self.init_args_dict()
         return self.args_dict
 
+
     def plot_image(self):
         img=plt.imread(self.static_image_file)
         plt.imshow(img)
+
 
     def load_data(self): 
         print(self.trajectory_file)
         self.world_data = np.loadtxt( self.trajectory_file)
         self.world_data = self.world_data[:,( 0, 1, 2, 4)]
+
         return self.world_data
+
+
     def world2pixel(self):
         self.world_data =np.concatenate(( self.world_data, np.ones((1, len(self.world_data))).T), axis = 1)
         pixel_data = self.world_data*0 
@@ -103,7 +116,6 @@ class Experiment:
         im_src = cv2.imread(str(self.obstacle_image_file))
         stat_img = cv2.imread(str( self.static_image_file))
         print(  im_src.shape[0])
-
 
         corners= np.array( [[im_src.shape[1], im_src.shape[0]],
                             [0, im_src.shape[0]],
@@ -128,12 +140,15 @@ class Experiment:
         self.world_obst  = cv2.warpPerspective(im_src, h, ( int(np.max(corners_real[:,0])/self.scaling), int(np.max(corners_real[:,1])/self.scaling)), borderValue = (255, 255, 255))
         self.world_stat = cv2.warpPerspective(stat_img, h, ( int(np.max(corners_real[:,0])/self.scaling), int(np.max(corners_real[:,1])/self.scaling)), borderValue = (255, 255,255))
 
+
     def save_shift(self):
         time_sorted = sorted(np.unique(self.world_shifted[:, 0]))
         min_time = time_sorted[0]
         rel_min = time_sorted[1] - time_sorted[0]
         self.world_shifted[:, 0] = (self.world_shifted[:, 0] - min_time) / rel_min
         np.savetxt(os.path.join(self.data_path, "{}.txt".format(self.name)), self.world_shifted[:, :4], fmt="%i\t%i\t%1.2f\t%1.2f")
+
+
     def save_images(self):
         cv2.imwrite(os.path.join(self.data_path, "{}_op.jpg".format(self.name)), self.world_obst)
         cv2.imwrite(os.path.join(self.data_path, "{}.jpg".format(self.name)), self.world_stat)
@@ -147,12 +162,14 @@ class Experiment:
         plt.show() 
 
 
-
 class BiWi(Experiment):
-    """The experiment objects store mainly paths to train and testfiles as well as homography matrices"""
+    """
+    The experiment objects store mainly paths to train and testfiles as well as homography matrices
+    """
     def __init__(self):
         super().__init__()
         self.delim = 'tab'
+
         self.args_dict = { "norm2meters" : False,
                         "data_columns" : ['frame', 'ID', 'y', 'x'] ,
                         "delim" : "tab",
@@ -166,7 +183,6 @@ class stanford(Experiment):
 
     def __init__(self):
         super().__init__()
-
 
         self.args_dict =  {"norm2meters": True,
                             "data_columns":  ['ID', 'xmin, left', 'ymin, left', 'xmax, right',
@@ -185,7 +201,6 @@ class stanford_synthetic(Experiment):
     def __init__(self):
         super().__init__()
 
-
         self.args_dict =  {"norm2meters" : False,
                             "data_columns":  ['ID', 'xmin, left', 'ymin, left', 'xmax, right',
                             'ymax, right', 'frame', 'lost', 'occuluded', 'generated', 'label', 'x', 'y', '_'],
@@ -200,259 +215,27 @@ class stanford_synthetic(Experiment):
 
 
 # Classes for simulation
-###################################################
-if True:
-    class squaresimulated_V00b0u2171(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V00b0u4343(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V00b0u8686(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V00b1u303(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V00b1u7371(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V00b2u171(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V00b2u6058(BiWi):
-        def __init__(self):
-            super().__init__()
-
-
-    class squaresimulated_V01b0u2171(BiWi):
-        def __init__(self):
-            super().__init__()
-
-
-    class squaresimulated_V01b0u4343(BiWi):
-        def __init__(self):
-            super().__init__()
-
-
-    class squaresimulated_V01b0u8686(BiWi):
-        def __init__(self):
-            super().__init__()
-
-
-    class squaresimulated_V01b1u303(BiWi):
-        def __init__(self):
-            super().__init__()
-
-
-    class squaresimulated_V01b1u7371(BiWi):
-        def __init__(self):
-            super().__init__()
-
-
-    class squaresimulated_V01b2u171(BiWi):
-        def __init__(self):
-            super().__init__()
-
-
-    class squaresimulated_V01b2u6058(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V02b0u2171(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V02b0u4343(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V02b0u8686(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V02b1u303(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V02b1u7371(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V02b2u171(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V02b2u6058(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V04b0u2171(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V04b0u4343(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V04b0u8686(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V04b1u303(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V04b1u7371(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V04b2u171(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V04b2u6058(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V06b0u2171(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V06b0u4343(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V06b0u8686(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V06b1u303(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V06b1u7371(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V06b2u171(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V06b2u6058(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V00u0b1u4427(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V01u0b1u4427(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V01u0b0u4343(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V01u0b0u3338(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V01u0b0u2171(BiWi):
-        def __init__(self):
-            super().__init__()
-
-
-    class squaresimulated_V02u0b1u4427(BiWi):
-        def __init__(self):
-            super().__init__()
-
-
-    class squaresimulated_V02u0b0u4343(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V02u0b0u3338(BiWi):
-        def __init__(self):
-            super().__init__()
-
-    class squaresimulated_V02u0b0u2171(BiWi):
-        def __init__(self):
-            super().__init__()
-
-
-    class squaresimulated_V04b1u4427(BiWi):
-        def __init__(self):
-            super().__init__()
-
-
-    class squaresimulated_V04b0u4343(BiWi):
-        def __init__(self):
-            super().__init__()
-
-
-    class squaresimulated_V04b0u3338(BiWi):
-        def __init__(self):
-            super().__init__()
-
-
-    class squaresimulated_V04b0u2171(BiWi):
-        def __init__(self):
-            super().__init__()
-
-
-    class squaresimulated_V06b1u4427(BiWi):
-        def __init__(self):
-            super().__init__()
-
-
-    class squaresimulated_V06b0u4343(BiWi):
-        def __init__(self):
-            super().__init__()
-
-
-    class squaresimulated_V06b0u3338(BiWi):
-        def __init__(self):
-            super().__init__()
-
-
-    class squaresimulated_V06b0u2171(BiWi):
-        def __init__(self):
-            super().__init__()
-
-#############################################
-
-
+class Simulated_data(BiWi):
+    def __init__(self):
+        super().__init__()
 
 class zara1simulated(BiWi):
-
     def __init__(self):
         super().__init__()
 
 class zara2simulated(BiWi):
-
     def __init__(self):
         super().__init__()
 
 class univsimulated(BiWi):
-
     def __init__(self):
         super().__init__()
 
 class hotelsimulated(BiWi):
-
     def __init__(self):
         super().__init__()
 
 class ethsimulated(BiWi):
-
     def __init__(self):
         super().__init__()
 
@@ -463,7 +246,6 @@ class eth(BiWi):
 
     def __init__(self):
         super().__init__()
-
 
         self.video_file = self.data_path / 'seq_eth.avi'
         self.trajectory_file = self.data_path / 'eth_raw.txt'
@@ -496,7 +278,6 @@ class hotel(BiWi):
         self.val_dir = self.data_path / 'val'
 
 
-
         self.H = np.array([[1.1048200e-02, 6.6958900e-04, -3.3295300e+00],
                            [-1.5966000e-03, 1.1632400e-02, -5.3951400e+00],
                            [1.1190700e-04, 1.3617400e-05, 5.4276600e-01]])
@@ -516,7 +297,6 @@ class univ(BiWi):
         self.train_dir = self.data_path / 'train'
         self.val_dir = self.data_path / 'val'
 
-
         self.H = np.array([[0.032529736503653,  -0.000730604859308 , -7.969749046103707],
                             [0.000883577230612,   0.026589331317173,  -8.754694531864281],
                             [0.001039809003515 ,  0.000025010101498 ,  1.007920696981254]])
@@ -531,6 +311,7 @@ class univ(BiWi):
       
         #self.H, status = cv2.findHomography( pts_img, pts_wrd)
         self.H_inv = inv(self.H)
+
 class zara1(BiWi):
 
     def __init__(self):
@@ -565,7 +346,8 @@ class zara1(BiWi):
 
         #self.H, status = cv2.findHomography(pts_img, pts_wrd)
         self.H_inv = inv(self.H)
-       
+
+
 class zara2(BiWi):
 
     def __init__(self):
@@ -592,6 +374,8 @@ class zara2(BiWi):
 
         #self.H, status = cv2.findHomography( pts_img, pts_wrd)
         self.H_inv = inv(self.H)
+
+
 class Videodata:
 
     def __init__(self, experiment):
@@ -600,6 +384,7 @@ class Videodata:
         self.frame_width = int(self.video.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.frame_height = int(self.video.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.frame_count = int(self.video.get(cv2.CAP_PROP_FRAME_COUNT))
+
 
     def read_file(self, _path, delim='\t'):
         data = []
@@ -614,14 +399,17 @@ class Videodata:
                 data.append(line)
         return np.asarray(data)
 
+
     def camcoordinates(self, xy):
 
         coords = xy.reshape(1, 1, -1)
         return cv2.perspectiveTransform(coords, np.linalg.inv(self.homography)).squeeze()[::-1]
 
+
     def getFrame(self, fid):
         self.video.set(cv2.CAP_PROP_POS_FRAMES, fid)
         return self.video.read()[1]
+
 
     def staticImage(self):
         ret = True

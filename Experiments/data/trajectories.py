@@ -5,14 +5,24 @@ import logging
 import numpy as np
 import torch
 from data.BaseTrajectories import BaseDataset
-from PIL import Image, ImageOps
+from PIL import Image
 import copy
-
 
 logger = logging.getLogger(__name__)
 
-# Rotate input around center by angle alpha
+# ====================================== Description ======================================
+# Script to load data of human motion behavior. The defined dataset_fn class  -
+# TrajectoryDataset - loads trajectories of pedestrians as described in the respective datasets.
+# The DataLoader processes one trajectory after another and loads each trajectory
+# independently of the movements/trajectories of remaining pedestrians in a scene. Furthermore,
+# it only loads suitable trajectories of pedestrians that remain at least obs_len + pred_len consecutive
+# time steps in the scene.
+# =========================================================================================
+
 def rotate(X, center, alpha):
+    """
+    Rotate input around center by angle alpha
+    """
     XX = X.copy()
 
     XX[:, 0] = (X[:, 0] - center[0]) * np.cos(alpha) + (X[:, 1] - center[1]) * np.sin(alpha) + center[0]
@@ -26,17 +36,26 @@ def split(a, n):
     return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
 
 
-
 def seq_collate(data):
+    """
+    Customized collate_fn function for DataLoader class
+    :param data:  Processed data of human motion behavior
+    :return: Dictionary containing loaded data categorized to:
+    * in_xy: Pytorch Tensor of shape: obs_len x nr_trajectories x 2, comprising (x,y)-coordinates of input trajectories
+    * gt_xy: Pytorch Tensor of shape: pred_len x nr_trajectories x 2, comprising (x,y)-coordinates of ground truth future trajectories
+    * in_dxdy: Pytorch Tensor of shape: obs_len-1 x nr_trajectories x 2, comprising relative coordinates of input trajectories
+    * gt_dxdy: Pytorch Tensor of shape: pred_len x nr_trajectories x 2, comprising relative coordinates ground truth future trajectories
+    * size: Pytorch Tensor of shape: 1, defining the number of trajectories
+    * scene_img: List of corresponding scene images
+    * occupancy: List of occupancy maps
+    """
+
     obs_traj_list, pred_traj_list, obs_traj_rel_list, pred_traj_rel_list, scene_img_list, occupancy_list = zip(*data)
 
     obs_traj = torch.cat(obs_traj_list, dim=0).permute(1, 0, 2)
     pred_traj = torch.cat(pred_traj_list, dim=0).permute(1, 0, 2)
     obs_traj_rel = torch.cat(obs_traj_rel_list, dim=0).permute(1, 0, 2)
     pred_traj_rel = torch.cat(pred_traj_rel_list, dim=0).permute(1, 0, 2)
-
-
-
 
     return {"in_xy": obs_traj,
             "gt_xy": pred_traj,
@@ -45,21 +64,19 @@ def seq_collate(data):
             "size" : torch.LongTensor([obs_traj.size(1)]),
             "scene_img": scene_img_list,
             "occupancy" : occupancy_list,
-
             }
 
 
-    
-
-
 class TrajectoryDataset(BaseDataset):
-    """Dataloder for the Trajectory datasets"""
-    #TODOD: check framerates
+    """
+    Customized dataset_fn class for the Trajectory datasets. This class loads only suitable trajectories of pedestrians that
+    remain at least obs_len + pred_len consecutive time steps in the scene.
+    """
     def __init__(
         self,
         save = False,
         load_p = True,
-        dataset_name  ="stanford",
+        dataset_name  ="zara1",
         phase = "test",
         obs_len=8,
         pred_len=12,
@@ -70,15 +87,30 @@ class TrajectoryDataset(BaseDataset):
         max_num = 5,
         logger = logger,
         special_scene = None,
-        load_occupancy = False
+        load_occupancy = False,
+        padding= False,
+        dataset_type= "real",
+        analyse_real_dataset= False
          ):
-
+        """
+        Args:
+        - data_dir: Directory containing dataset files in the format
+        <frame_id> <ped_id> <x> <y>
+        - obs_len: Number of time-steps in input trajectories
+        - pred_len: Number of time-steps in output trajectories
+        - skip: Number of frames to skip while making the dataset
+        - delim: Delimiter in the dataset files
+        """
         super(TrajectoryDataset, self).__init__(save, load_p, dataset_name, phase,
                                                 obs_len, pred_len,  time_step, skip,
                                                 data_augmentation,  scale_img,  max_num,
                                                 logger, special_scene, load_occupancy)
 
+
     def load(self):
+        """
+        Load data. Dataset-files are .txt-file with format: <frame_id> <ped_id> <x> <y>
+        """
         seqs = []
         seqs_rel = []
         scene_nr = []
@@ -91,15 +123,14 @@ class TrajectoryDataset(BaseDataset):
 
         # Process images
         for path in [file for file in self.all_files if ".jpg" in file]:
-            print( path)
+            print(path)
             scene_path, data_type = path.split(".")
             scene = scene_path.split("/")[-1]
 
             img_parts = scene.split("-")
 
             if self.load_occupancy and img_parts[-1] =="op":
-              
-                scene = img_parts[-2 ]
+                scene = img_parts[-2]
                 self.load_image(path, scene)
 
             elif not self.load_occupancy and img_parts[-1] !="op":
@@ -108,14 +139,13 @@ class TrajectoryDataset(BaseDataset):
                 continue
 
         if len(self.images)== 0:
-            assert False, "No valid imges in folder"
-
+            assert False, "No valid images in folder"
 
         # Process txt-files with coordinates
         for path in [file for file in self.all_files if ".txt" in file]:
             if not collect_data:
-
                 break
+
             if self.special_scene and not self.special_scene in path:
                 continue
 
@@ -128,47 +158,46 @@ class TrajectoryDataset(BaseDataset):
 
                 self.logger.info("preparing %s" % scene)
 
-                # get data
+                # Get data
                 data = self.load_file(path,  self.delim)
 
                 # Get all ids (avoid duplicates)
                 unique_ids = np.unique(data[:, 1])
 
-                # if max number get only first max_num ids
+                # If max number, get only first max_num ids
                 if self.max_num:
                     unique_ids = unique_ids[:self.max_num]
                     collect_data = False
 
                 for id in unique_ids:
-                    # look at isolated trajectory of pedestr with respective id
+                    # Look at trajectory of pedestrian with respective id
                     trajectory = data[data[:, 1] == id][:, (0, 1, 2, 3)]
 
-                    # define starting point for trajectory as 0
-                    trajectory[:, 0] = (trajectory[:, 0] - np.min(trajectory[:, 0]))  # / 12.
+                    # Define starting point for trajectory as 0
+                    trajectory[:, 0] = (trajectory[:, 0] - np.min(trajectory[:, 0]))
 
-                    # ensure that trajectory has desired seq length and that id appears to be in following sequences
+                    # ensure that trajectory has desired sequence length and that id pedestrian did not leave the scene - otherwise skip trajectory
                     if (trajectory[1:, 0] - trajectory[:-1, 0] != 1).any() or len(trajectory[:]) < self.seq_len:
-
                         continue
 
                     xy = trajectory[:, (2, 3)]
-                    # Why this part?
+                    # Ensure to process only entire trajectories (of length seq_len)
                     nr_traj = int(len(xy) / self.seq_len)
                     xy = xy[:nr_traj * self.seq_len]
-                    # ==========
                     xy = xy.reshape(-1, self.seq_len, 2)
 
                     for ped in np.arange(len(xy)):
-
                         img = self.images[scene]["scaled_image"]
-                        if self.data_augmentation:
 
+                        # Augment data
+                        if self.data_augmentation:
                             if self.format == "pixel":
                                 scale2orig = 1 / self.images[scene]["scale_factor"]
                             elif self.format == "meter":
                                 scale2orig = self.img_scaling
                             else:
                                 assert False, " Not valid format '{}': 'meters' or 'pixel'".format(self.format)
+
                             alpha = np.random.rand() * 2 * np.pi
                             center = np.array(img.size) / 2.
                             corners = np.array([[0, 0], [0, img.height], [img.width, img.height], [img.width, 0]])
@@ -183,9 +212,9 @@ class TrajectoryDataset(BaseDataset):
 
 
                                 elif rand_num == 2:
+                                    # Transform wall
                                     img = img.transpose(Image.FLIP_TOP_BOTTOM)
                                     xy[ped, :, 1] = img.height * scale2orig - xy[ped, :, 1]
-                                    # transform wall
 
                             img = img.rotate(alpha / np.pi * 180, expand=True)
 
@@ -195,27 +224,27 @@ class TrajectoryDataset(BaseDataset):
 
                             xy[ped] = rotate(xy[ped], center * scale2orig, alpha) - offset * scale2orig
 
-
-
                         self.image_list.append({"ratio": self.images[scene]["ratio"], "scene": scene, "scaled_image": copy.copy(img)})
                         self.scene_list.append(scene)
                         scene_nr.append(1)
 
-                    # get relative distance to previous spot
+                    # Get relative distance to previous spot
                     dxdy = xy[:, 1:] - xy[:, :-1]
 
-                    # append distance and rel dist to previous spot
+                    # Append distance and rel dist to previous spot
                     seqs.append(xy)
                     seqs_rel.append(dxdy)
 
-        # Create one list for distances
+        # Create one list of (x,y)-coordinates and one list of relative (x,y)-coordinates
         seq_list = np.concatenate(seqs,  axis = 0)
         seq_list_rel = np.concatenate(seqs_rel,  axis = 0)
 
         self.num_seq = len(seq_list)
-        # Convert numpy -> Torch Tensor
+
+        # Specify scene numbers
         self.scene_nr = torch.LongTensor(np.cumsum(scene_nr))
 
+        # Store input and ground truth future trajectories in pytorch tensors
         self.obs_traj = torch.from_numpy(
             seq_list[:,  :self.obs_len]).type(torch.float) 
         self.pred_traj = torch.from_numpy(
@@ -228,22 +257,20 @@ class TrajectoryDataset(BaseDataset):
         del seq_list
         del seq_list_rel
 
-
-
         if self.scale:
             self.scale_func()
         if self.norm2meters:
             self.scale2meters()
-
-
         if self.save:
             self.save_dset()
 
 
-
-
-
     def get_scene(self, index):
+        """
+        Get specific scene with index.
+        :param index: Index of scene
+        :return: Information about scene
+        """
         scene_img = self.image_list[index]
 
         return {"in_xy":    self.obs_traj[index].unsqueeze(1),
@@ -255,15 +282,14 @@ class TrajectoryDataset(BaseDataset):
                 "img" : scene_img,
                 "scene_img" : [scene_img],
                 }
-    def __getitem__(self, index):
 
+    def __getitem__(self, index):
         scene_img = self.image_list[index]
 
         if self.wall_available:
             walls = self.walls_list[index]
         else:
             walls = torch.empty(1)
-
 
         return [self.obs_traj[index].unsqueeze(0),
                 self.pred_traj[index].unsqueeze(0),
@@ -274,10 +300,8 @@ class TrajectoryDataset(BaseDataset):
                 ]
 
 
-
 if __name__ == "__main__":
-
-
+    # Test customized DataLoader
     from torch.utils.data import DataLoader
     print("Start Trajectory")
     current_dir = os.curdir
@@ -287,11 +311,15 @@ if __name__ == "__main__":
                                  obs_len=8,
                                  pred_len=12,
                                  data_augmentation = 0,
-                                 skip=20, max_num= 1000 ,
+                                 skip=20,
+                                 max_num= 1000,
                                  logger = logger)
 
-    batch= dataset.get_scene(18)
+    # Get batch
+    idx = 18
+    batch = dataset.get_scene(idx)
 
+    # Initialize loader
     loader = DataLoader(
         dataset,
         batch_size = 32,

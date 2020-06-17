@@ -1,31 +1,30 @@
 import os, sys
-
 sys.path.append(os.getcwd())
-
 import logging
-
-import pandas as pd
 import numpy as np
 import torch
-from torch.utils.data import Dataset
+import matplotlib.pyplot as plt
+import math
 
 from data.analyse_dataset import analyse_dataset
 from data.BaseTrajectories import BaseDataset
-from data.tools import image_json
-from PIL import Image, ImageOps
-import matplotlib.pyplot as plt
-import seaborn as sns
-import copy
-import math
-
 from helper.debug_print import debug_print
-
-import data.experiments
 
 logger = logging.getLogger(__name__)
 
+# ====================================== Description ======================================
+# Script to load data of human motion behavior. The defined dataset_fn class  -
+# TrajectoryDatasetEval - loads trajectories of pedestrians as described in the respective datasets.
+# The DataLoader processes one trajectory after another BUT provides additional information about
+# which trajectories belong to the same sequence. Furthermore, it is possible to pad missing
+# information for non-suitable trajectories of pedestrians that remain less than
+# obs_len + pred_len consecutive time steps in the scene.
+# =========================================================================================
 
 def rotate(X, center, alpha):
+    """
+    Rotate input around center by angle alpha
+    """
     XX = X.copy()
 
     XX[:, 0] = (X[:, 0] - center[0]) * np.cos(alpha) + (X[:, 1] - center[1]) * np.sin(alpha) + center[0]
@@ -38,10 +37,29 @@ def split(a, n):
     k, m = divmod(len(a), n)
     return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
 
+
 def flatten(l):
     return flatten(l[0]) + (flatten(l[1:]) if len(l) > 1 else []) if type(l) is list else [l]
 
+
 def seq_collate_eval(data):
+    """
+    Customized collate_fn function for customized DataLoader class
+    :param data: Processed data of human motion behavior
+    :return: Dictionary containing loaded data categorized to:
+    * in_xy: Pytorch Tensor of shape: obs_len x nr_trajectories x 2, comprising (x,y)-coordinates of input trajectories
+    * gt_xy: Pytorch Tensor of shape: pred_len x nr_trajectories x 2, comprising (x,y)-coordinates of ground truth future trajectories
+    * in_dxdy: Pytorch Tensor of shape: obs_len-1 x nr_trajectories x 2, comprising relative coordinates of input trajectories
+    * gt_dxdy: Pytorch Tensor of shape: pred_len x nr_trajectories x 2, comprising relative coordinates ground truth future trajectories
+    * size: Pytorch Tensor of shape: 1x1, defining the number of trajectories
+    * seq_start_end: Tuple of size nr_sequences. The n-th entry contains a tensor of size 1x2 that specifies the ids of the pedestrians in
+     the n-th sequence, i.e. pedestrians with ids seq_start_end[n][0] to seq_start_end[n][1] are present in sequence n.
+    * pred_check: Tuple of size nr_sequences. The n-th entry contains a tensor of size nr_pedestrians_in_sequence_n x 1. The tensor contains the values
+    0 and 1, where the value 0 indicates that the trajectory of the respective pedestrians was padded.
+    * pad_mask: Tuple of size nr_sequences. The n-th entry contains a tensor of size nr_pedestrians_in_sequence_n x self.seq_len. The tensor contains the values
+    0 and 1, where the value 0 indicates that for the respective time step the trajectory of the respective pedestrians needs to be padded.
+    """
+
     obs_traj_list, pred_traj_list, obs_traj_rel_list, pred_traj_rel_list, pred_check, pad_mask = zip(*data)
 
     _len = [len(seq) for seq in obs_traj_list]
@@ -52,7 +70,6 @@ def seq_collate_eval(data):
     pred_traj = torch.cat(pred_traj_list, dim=0).permute(1, 0, 2)
     obs_traj_rel = torch.cat(obs_traj_rel_list, dim=0).permute(1, 0, 2)
     pred_traj_rel = torch.cat(pred_traj_rel_list, dim=0).permute(1, 0, 2)
-
 
     return {"in_xy": obs_traj,
             "gt_xy": pred_traj,
@@ -66,9 +83,11 @@ def seq_collate_eval(data):
 
 
 class TrajectoryDatasetEval(BaseDataset):
-    """Dataloder for the Trajectory datasets"""
-
-    # TODOD: check framerates
+    """
+    Customized dataset_fn class for the Trajectory datasets. This class loads trajectories of human motion behavior and provides
+    information about which trajectories are present in a specific scene. It also pads non-suitable trajectories
+    of pedestrians that remain less than obs_len + pred_len (= seq_len) consecutive time steps in the scene.
+    """
     def __init__(self, **kwargs):
         """
         Args:
@@ -81,30 +100,32 @@ class TrajectoryDatasetEval(BaseDataset):
         """
         super(TrajectoryDatasetEval, self).__init__(**kwargs)
 
-        #Todo: can I delete this safely?
-        #BaseDataset.__init__(self, **kwargs)
         self.__dict__.update(locals())
 
 
     def load(self):
-
+        """
+        Load data. Dataset-files are .txt-file with format: <frame_id> <ped_id> <x> <y>
+        """
         scene_nr = []
-
         seq_list = []
         self.prediction_check = []
         self.pad_mask_list = []
-        ped_skipped = 0
-        skipped_ped = []
+
         total_ped = 0
 
-
+        ped_skipped = 0
+        skipped_ped = []
 
         collect_data = True
 
         num_peds_in_seq = []
+
+        # Process txt-files with coordinates
         for path in [file for file in self.all_files if ".txt" in file]:
             if not collect_data:
                 break
+
             if self.special_scene and not self.special_scene in path:
                 continue
 
@@ -116,8 +137,11 @@ class TrajectoryDatasetEval(BaseDataset):
                 scene = '_'.join(scene.split("_")[1:])
 
                 self.logger.info("preparing %s" % scene)
+
+                # Get data
                 data = self.load_file(path, self.delim)
 
+                # Get all frame-numbers (avoid duplicates)
                 frames = np.unique(data[:, 0]).tolist()
                 frame_data = []
 
@@ -126,9 +150,10 @@ class TrajectoryDatasetEval(BaseDataset):
 
                     if self.analyse_real_dataset:
                         # ==== Analyse real datasets =====
-                        ad = analyse_dataset(scene, data)
+                        ad = analyse_dataset(scene, data, self.seq_len)
                         ad.get_all_trajectories()
 
+                # Note that in real-world datasets, sometimes there are frames with no pedestrians moving in the scene. Therefore, pad these frames with old information
                 for frame in frames:
                     if frame in data[:, 0]:
                         frame_data.append(data[frame == data[:, 0], :])
@@ -141,17 +166,18 @@ class TrajectoryDatasetEval(BaseDataset):
                 if __name__ == "__main__":
                     print("Nr. of frames: " + str(len(frames)))
 
+                # Get number of sequences
                 num_sequences = int(math.ceil((len(frames) - self.seq_len) / self.skip))
 
-
+                # Iterate over sequences
                 for idx in range(0, num_sequences * self.skip, self.skip):
 
-                    # look at scenes idx to idx +  self.seq_len in format [framenr, pedid, x, y]
+                    # Look at scenes idx to idx +  self.seq_len in format [framenr, pedid, x, y]
                     curr_seq_data = np.concatenate(frame_data[idx:idx + self.seq_len], axis=0)
 
                     peds_in_curr_seq = np.unique(curr_seq_data[:, 1])
 
-                    # for padding create mask-matrix to later identify which ped has necessary length for predicition
+                    # For padding create mask-matrix to later identify which ped has necessary length for predicition
                     pad_mask = torch.zeros((len(peds_in_curr_seq), self.seq_len))
 
                     num_peds = 0
@@ -160,23 +186,22 @@ class TrajectoryDatasetEval(BaseDataset):
                         # Get sequence of pedestrian with id ped_id
                         curr_ped_seq = curr_seq_data[curr_seq_data[:, 1] == ped_id, :]
 
-
-                        # get padding indicees for padding
+                        # Get padding indicees for padding
                         pad_front = frames.index(curr_ped_seq[0,0]) - idx
                         pad_end = frames.index(curr_ped_seq[-1,0]) - idx
 
                         if self.dataset_type == "real" and self.padding and (curr_ped_seq[1:, 0] - curr_ped_seq[:-1, 0] != 1).any():
+                            # For real datasets we observe that there are pedestrians that leave the scene and enter it at a later point in time -> pad the respective missing time steps
                             temp_leaving = (curr_ped_seq[1:, 0] - curr_ped_seq[:-1, 0] != 1)
                             indicees = np.where(temp_leaving == True)[0]
                             indicees_mask = indicees + 1
                             indicees_mask =  np.concatenate((np.array([pad_front-1]),indicees_mask,np.array([pad_end+1])), axis=0)
-                            print(indicees)
 
-                            # pad mask
+                            # Create Pad mask
                             for i in range(len(indicees_mask)-1):
                                 pad_mask[int(_), indicees_mask[i]+1:indicees_mask[i+1]] = 1
 
-                            # padding
+                            # Perform padding
                             padding_start = np.ones((pad_front, curr_ped_seq.shape[1]))
                             padding_start[:, 1] *= ped_id
                             padding_start[:, 0] = np.cumsum(padding_start[:, 0]) - 1 + idx
@@ -193,9 +218,10 @@ class TrajectoryDatasetEval(BaseDataset):
                                 curr_ped_seq[element + 1, 0] = curr_ped_seq[element + 1, 0] + 1
 
                         else:
+                            # For the synthetic datasets we generate, the pedestrians do not re-enter the scene
                             pad_mask[int(_), pad_front:(pad_end+1)] = 1
 
-                            # perform padding
+                            # Perform padding
                             if self.padding:
                                 padding_start = np.ones((pad_front, curr_ped_seq.shape[1]))
                                 padding_start[:,1] *= ped_id
@@ -208,12 +234,8 @@ class TrajectoryDatasetEval(BaseDataset):
 
                                 curr_ped_seq = np.concatenate((padding_start,curr_ped_seq,padding_end), axis=0)
 
-
-                        # Only use data of ped if ped is over all timesteps in frame - if padding active, this should never be the case
+                        # Only use data of pedestrian if pedestrian is over all timesteps in frame - if padding active, this should never be the case
                         if (curr_ped_seq[1:, 0] - curr_ped_seq[:-1, 0] != 1).any() or (len(curr_ped_seq) != self.seq_len):
-                            print("here")
-                            print("curr_ped_seq: " + str(curr_ped_seq))
-                            quit()
                             if ped_id not in skipped_ped:
                                 skipped_ped.append(ped_id)
                                 ped_skipped += 1
@@ -233,7 +255,8 @@ class TrajectoryDatasetEval(BaseDataset):
                         calc_pred = torch.sum(pad_mask, axis=1).reshape(pad_mask.shape[0], 1)
                         calc_pred[calc_pred[:, 0] < self.seq_len] = 0
                         self.prediction_check.append(calc_pred)
-                        # store pad mask
+
+                        # Store pad mask
                         self.pad_mask_list.append(pad_mask)
 
                         num_peds_in_seq.append(num_peds)
@@ -241,7 +264,6 @@ class TrajectoryDatasetEval(BaseDataset):
                         seq_list.append(np.stack((peds_scene), axis=0))
                         scene_nr.append(1)
 
-        print("ped_skipped: " + str(ped_skipped))
 
         seq_list = np.concatenate(seq_list, axis=0)
         cum_start_idx = [0] + np.cumsum(num_peds_in_seq).tolist()
@@ -279,7 +301,6 @@ class TrajectoryDatasetEval(BaseDataset):
 
 
     def print_wall(self, wall_points):
-
         for wall in wall_points:
             for index in range(1, len(wall) + 2):
                 ind = [index % len(wall), (index + 1) % len(wall)]
@@ -289,7 +310,11 @@ class TrajectoryDatasetEval(BaseDataset):
 
 
     def get_scene(self, index):
-
+        """
+        Get specific scene with index.
+        :param index: Index of scene
+        :return: Information about scene
+        """
         in_xy, gt_xy, in_dxdy, gt_dxdy, pred_check, pad_mask = self.__getitem__(index)
 
         return {"in_xy": in_xy.permute(1, 0, 2),
@@ -302,7 +327,6 @@ class TrajectoryDatasetEval(BaseDataset):
                 }
 
     def scale_func(self):
-
         for index in np.arange(self.num_seq):
             start, end = self.seq_start_end[index]
             scene = self.scene_list[index]
@@ -313,8 +337,6 @@ class TrajectoryDatasetEval(BaseDataset):
             self.trajectory[start:end] *= ratio
 
     def __getitem__(self, index):
-
-
         start, end = self.seq_start_end[index]
         return [self.obs_traj[start:end],
                 self.pred_traj[start:end],
@@ -326,6 +348,7 @@ class TrajectoryDatasetEval(BaseDataset):
 
 
 if __name__ == "__main__":
+    # Test customized DataLoader
     from torch.utils.data import DataLoader
 
     print("Start Trajectory")
@@ -344,10 +367,11 @@ if __name__ == "__main__":
     print("get scene 0...")
     batch = dataset.get_scene(-1)
     last_scene = dataset.__getitem__(-1)
-    print("THIS: " +str(last_scene[-2]))
+
     print("obs_traj_rel.size: " + str(dataset.obs_traj_rel.size()))
     print("seq_start_end: " + str(dataset.seq_start_end))
     print("num_scenes: "+ str(len(dataset.seq_start_end)))
+
     loader = DataLoader(
         dataset,
         batch_size=32,
@@ -358,24 +382,3 @@ if __name__ == "__main__":
     for element in iter(loader):
         batch = element
         print("batch from loader: " + str((batch["pred_check"])))
-    #batch = next(next(iter(loader)))
-    #print("start_seq_from loader: " + str(batch["seq_start_end"]))
-    #print("batch from loader: "+ str((batch["pred_check"])))
-
-
-"""
-if __name__ == "__main__":
-    from torch.utils.data import DataLoader
-
-    print("Start Trajectory")
-    current_dir = os.curdir
-    dataset = TrajectoryDatasetEval(dataset_name="hotel",
-                                    phase="test",
-                                    obs_len=8,
-                                    pred_len=12,
-                                    data_augmentation=0,
-                                    skip=20, max_num=1000,
-                                    logger=logger)
-    print("eval function load:")
-    dataset.load()
-"""

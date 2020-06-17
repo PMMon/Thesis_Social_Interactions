@@ -2,8 +2,16 @@ from torch.utils.data import DataLoader
 from data.trajectories import TrajectoryDataset, seq_collate
 from data.trajectories_scene import TrajectoryDatasetEval, seq_collate_eval
 
+# ================================= Description =================================
+# Script defines DataLoader. The Trajectories can either be loaded sequence-wise
+# (seq_collate_eval & TrajectoryDatasetEval) or they are processed one after another/
+# trajectory-wise (seq_collate & TrajectoryDataset)
+# ===============================================================================
 
 def data_loader(args, config, phase, device = 'cpu', logger = None):
+    """
+    Loads data corresponding to model_type and phase (train, val, test)
+    """
     if args.model_type == "social-lstm" or args.model_type == "lstm":
         collate_fn = seq_collate_eval
         dataset_fn = TrajectoryDatasetEval

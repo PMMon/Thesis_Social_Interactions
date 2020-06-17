@@ -1,30 +1,28 @@
 import os, sys
-
 sys.path.append(os.getcwd())
-
 import logging
-
 import pandas as pd
 import numpy as np
 import torch
 from torch.utils.data import Dataset
-from data.tools import image_json
-from PIL import Image, ImageOps
+from PIL import Image
 import matplotlib.pyplot as plt
-import seaborn as sns
 import copy
-import math
-
+from pathlib import Path
 
 import data.experiments
 
-
+root_path = Path(os.path.realpath(__file__)).parent.parent
 logger = logging.getLogger(__name__)
+
 class BaseDataset(Dataset):
+    """
+    Base Class that resembles basic functionality for the customized DataLoader classes.
+    """
     def __init__(self,
                  save=False,
                  load_p=True,
-                 dataset_name="stanford",
+                 dataset_name="zara1",
                  phase="test",
                  obs_len=8,
                  pred_len=12,
@@ -39,28 +37,43 @@ class BaseDataset(Dataset):
                  padding=False,
                  dataset_type="squaresimulated",
                  analyse_real_dataset = False):
-        super( BaseDataset, self).__init__()
+
+        super(BaseDataset, self).__init__()
 
         self.__dict__.update(locals())
         self.save_dict = copy.copy(self.__dict__)
 
         self.get_save_path()
-        try:
-            self.dataset = getattr(data.experiments, dataset_name)()
-        except:
-            self.dataset = getattr(data.experiments, "simulated")()
-            print("in except!")
-            self.dataset.name = dataset_name
 
-        self.__dict__.update(self.dataset.get_dataset_args())
-        self.data_dir = self.dataset.get_file_path(phase)
+        if "simulated" in dataset_name:
+            self.dataset = getattr(data.experiments, "Simulated_data")()
+            self.__dict__.update(self.dataset.get_dataset_args())
+            self.data_dir = self.get_file_path_simulated(dataset_name, phase)
+        else:
+            self.dataset = getattr(data.experiments, dataset_name)()
+            self.__dict__.update(self.dataset.get_dataset_args())
+            self.data_dir = self.dataset.get_file_path(phase)
+
         self.seq_len = self.obs_len + self.pred_len
-        # do not use any timestep twice
 
         all_files = os.listdir(self.data_dir)
         self.all_files = [os.path.join(self.data_dir, _path) for _path in all_files]
 
         self.load_dset()
+
+
+    def get_file_path_simulated(self, dataset_name, phase):
+        if phase == "test":
+            dataDir = root_path / 'datasets' / dataset_name / 'test'
+        elif phase == "train":
+            dataDir =  root_path / 'datasets' / dataset_name / 'train'
+        elif phase == "val":
+            dataDir = root_path / 'datasets' / dataset_name / 'val'
+        else:
+            raise AssertionError('"phase" must be either train, val or test.')
+
+        return str(dataDir)
+
 
     def get_save_path(self):
         path = ""
@@ -88,17 +101,16 @@ class BaseDataset(Dataset):
             scaled_img = img.resize((new_width, new_height ), Image.ANTIALIAS)
 
         else:
-
             scaled_img = img
             scale_factor = 1
             ratio = 1.
 
-
-
         self.images.update({scene: {"ratio" : ratio, "scale_factor" : scale_factor,  "scaled_image": scaled_img }})
+
 
     def get_ratio(self, scene):
         return self.images[scene]["ratio"]
+
 
     def scale_func(self):
 
@@ -110,6 +122,7 @@ class BaseDataset(Dataset):
             self.obs_traj_rel[index] *= ratio
             self.pred_traj_rel[index] *= ratio
 
+
     def scale2meters(self):
         self.obs_traj *= self.img_scaling
         self.pred_traj *= self.img_scaling
@@ -117,6 +130,7 @@ class BaseDataset(Dataset):
         self.pred_traj_rel *= self.img_scaling
 
         self.format = "meter"
+
 
     def load_file(self, _path, delim="tab", engine='python'):
         if delim == 'tab':
@@ -128,7 +142,6 @@ class BaseDataset(Dataset):
         df.columns = self.data_columns
 
         if "label" and "lost" in df:
-
             data_settings = {  # "label": "Pedestrian",
                 "lost": 0}
 
@@ -144,19 +157,17 @@ class BaseDataset(Dataset):
 
         return np.asarray(df.values)
 
+
     def __len__(self):
         return self.num_seq
 
 
     def plot(self, index, modes = ["in_xy", "gt_xy", "in_dxdy", "gt_dxdy"], image_type = "scaled", final_mask = False):
-
         # Define saving directory for figure
-        saving_directory = os.path.join(os.path.expanduser("~"), "TrajectoryPredictionBasics", "Saved_Plots", "trajectories")
+        root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        saving_directory = os.path.join(root_path, "Saved_Plots", "trajectories")
 
         out = self.get_scene(index)
-
-
-
 
         if image_type =="orig":
             img_label = "img"
@@ -174,8 +185,6 @@ class BaseDataset(Dataset):
 
         center = out["in_xy"][-1, 0] * scale
 
-
-
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.imshow(img)
@@ -187,7 +196,6 @@ class BaseDataset(Dataset):
                 marker = "--"
             else:
                 marker = '-'
-
 
             traj = out["{}".format(m)][:, 0]*scale
             traj = traj.cpu().numpy()
@@ -201,9 +209,8 @@ class BaseDataset(Dataset):
 
         if not os.path.exists(saving_directory):
             os.makedirs(saving_directory)
-        fig.savefig(saving_directory + "/" + str(index) + "_" + str(image_type) + ".png")
+        fig.savefig(os.path.join(saving_directory, str(index) + "_" + str(image_type) + ".png"))
         plt.close(fig)
-
 
         #error = abs(final_pos_pixel/scale - out["gt_xy"][-1, 0])
         #error_bound =  rel_scaling*self.scaling_small
@@ -214,10 +221,8 @@ class BaseDataset(Dataset):
 
 
     def load_dset(self):
-
-
         pickle_path = os.path.join(self.data_dir, self.save_path)
-        if os.path.isfile( pickle_path) and self.load_p:
+        if os.path.isfile(pickle_path) and self.load_p:
 
             data = torch.load(pickle_path, map_location = 'cpu')
 
@@ -232,8 +237,6 @@ class BaseDataset(Dataset):
         pickle_path = os.path.join(self.data_dir, self.save_path)
         if not  os.path.isfile(pickle_path):
 
-
-
             data_save = {}
 
             os.path.join(self.data_dir, self.save_path)
@@ -241,13 +244,10 @@ class BaseDataset(Dataset):
             for name, value in self.__dict__.items():
 
                 try:
-
                     data_save.update({name: value})
                     torch.save(data_save, pickle_path)
 
-
                 except:
                     data_save.pop(name)
-
 
             self.logger.info("data saved to {}".format(pickle_path))
