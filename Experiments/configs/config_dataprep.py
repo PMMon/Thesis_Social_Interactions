@@ -1,3 +1,7 @@
+# ========= Description ==============
+# Configurations for loading the data
+# ====================================
+
 class config:
     def __init__(self):
         self.load_occupancy = False
