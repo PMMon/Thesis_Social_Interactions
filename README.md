@@ -14,7 +14,7 @@ individuals. Furthermore, we introduce evaluation metrics that go beyond the com
 
 Below we show trajectories of pedestrians that socially interact with each other. We see that the Vanilla LSTM Model mainly predicts linear trajectories and is not capable of predicting the social interactions between pedestrians. In comparison, we observe that the Social LSTM Model is able to predict the interactions between pedestrians. 
 
-![Vanilla LSTM Model Predictions](<Experiments/ReadMeSupport/Qualitative_Analysis/Vanilla_LSTM_Model_Predictions.png>) | ![Weak Social Interactions](<Experiments/ReadMeSupport/Qualitative_Analysis/Social_LSTM_Model_Predictions.png>) 
+![Vanilla LSTM Model Predictions](<Experiments/ReadMeSupport/Qualitative_Analysis/Vanilla_LSTM_Model_Predictions.PNG>) | ![Weak Social Interactions](<Experiments/ReadMeSupport/Qualitative_Analysis/Social_LSTM_Model_Predictions.PNG>) 
 :-------------------------:|:-------------------------:
 Predicted trajectories of the Vanilla LSTM Model | Predicted Trajectories of the Social LSTM Model [[1]](#1)
 
@@ -51,13 +51,13 @@ You can conduct experiments on datasets of real-world human motion behavior or o
 There exists a variety of publicly available datasets of real-world human trajectories that can be used for pedestrian trajectory predictions. In this thesis, we evaluate our models on two particular datasets: UCY [[3]](#3) and ETH [[4]](#4). You can find these datasets in the folder [Experiments/datasets](Experiments/datasets).
 
 
-<img src= "Experiments/ReadMeSupport/Real_Datasets/ETH_UCY_Datasets.png" width = "" height = "">
+<img src= "Experiments/ReadMeSupport/Real_Datasets/ETH_UCY_Datasets.PNG" width = "" height = "">
 
 ### Synthetic Datasets
 For further information about how to generate hand-tailored datasets that focus on the interactions between pedestrians go to [Generate_Datasets](Generate_Datasets).
 
-<img src= "Generate_Datasets/ReadMeSupport/PedPed_Animations/V01b0u2171.png" width = "400" height = "">
-<img src= "Generate_Datasets/ReadMeSupport/PedPed_Animations/V03b1u4427.png" width = "400" height = "">
+<img src= "Generate_Datasets/ReadMeSupport/PedPed_Animations/V01b0u2171.PNG" width = "400" height = "">
+<img src= "Generate_Datasets/ReadMeSupport/PedPed_Animations/V03b1u4427.PNG" width = "400" height = "">
 
 ## Experiments
 For further information about how to train and evaluate different trajectory prediction models on real and synthetic datasets, go to [Experiments](Experiments).
