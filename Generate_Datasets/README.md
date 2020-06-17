@@ -83,8 +83,7 @@ python main/GenPedSpaceScene.py --V0 2 --sigma 0.8686 --U0 3 --r 0.4343 --scenar
 
 The animations can be found under <code>docs/videos/PedSpaceScene/*datasetname*</code>. 
 
-
-
+<br />
 
 ## References
 <a id="1">[1]</a>  D. Helbing and P. Molnár: “Social Force Model for Pedestrian Dynamics”. In: *Physical Review* 51.5 (1995).
