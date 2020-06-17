@@ -1,19 +1,22 @@
 import torch
 import platform
 import numpy as np
-import math
+import os
 
-from solver.losses import L2, FDE, Scene_distances, ADE_nl_regions, nonlinear_loss, own_MSE, ADE_nl_Trajectories_fine, ADE_nl_Trajectories_coarse
-from solver.visualize_trajectories import create_visualization, plot_traj_for_social_exp
+from solver.losses import L2, FDE, Scene_distances, ADE_nl_regions, nonlinear_loss, own_MSE, nl_loss_classified_Trajectories
+from solver.visualize_trajectories import plot_predictions, plot_predictions_background_img
 from helper.calc_distance import calculate_distance
 from helper.gradient_tracking import plot_grad_flow
 from helper.histogram import create_histogram
-from helper.results_to_xlxs import loss_nonlinear_trajectories, loss_nonlinear_trajectories_coarse
+from helper.results_to_xlxs import loss_on_traj_class
 
 class Solver(object):
-    def __init__(self, optim,  loss_all, epochs, args, server, loss_func=torch.nn.MSELoss()):
+    """
+    Class for training/evaluating the model
+    """
+    def __init__(self, optim,  loss_all, epochs, args, server):
+        self.root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         self.optim = optim
-        self.loss_func = loss_func
         self.loss_history_all = loss_all
         self.last_epoch = epochs
         self.dataset_name = args.dataset_name
@@ -21,7 +24,7 @@ class Solver(object):
         self.args = args
         self.server = server
         self.best_val = 100
-        self.best_val_FDE = 0
+        self.best_val_FDE = 100
         self.best_val_epoch = 0
 
         self.distances_targets = np.array([])
@@ -32,17 +35,24 @@ class Solver(object):
 
 
     def reset_histories(self):
+        """
+        Reset loss history of model
+        """
         self.loss_history = []
+
 
     def train(self, model, model_type, train_loader, val_loader, phase, num_epochs, log_nth=0, visualize=False, train_epoch = 0):
         """
-                Train a given model with the provided data.
-                Inputs:
-                - model: model object initialized from a torch.nn.Module
-                - train_loader: train data in torch.utils.data.DataLoader
-                - val_loader: val data in torch.utils.data.DataLoader
-                - num_epochs: total number of training epochs
-                - log_nth: log training accuracy and loss every nth iteration
+        Train a given model with the provided data.
+        :param model: Model object
+        :param model_type: Type of model (for current implementation either linear, lstm or social-lstm)
+        :param train_loader: Train data in torch.utils.data.DataLoader
+        :param val_loader: Val data in torch.utils.data.DataLoader
+        :param phase: Phase of model, either train, val or test
+        :param num_epochs: Total number of training epochs
+        :param log_nth: Log training accuracy and loss every nth iteration
+        :param visualize: Specifies whether to visualize prediction or not (boolean)
+        :param train_epoch: Current training epoch
         """
 
         self.reset_histories()
@@ -66,31 +76,26 @@ class Solver(object):
 
             #Inititalize Additional losses
             if "G_distance_loss" in model.losses:
+                # Calculates the error with respect to the distances between all pedestrians in a scene
                 distance_loss = Scene_distances()
             if "G_ADE_nl_regions" in model.losses:
+                # Measures the average nonlinear displacement error
                 ADE_nl = ADE_nl_regions(threshold=self.args.threshold_nl, approx_scheme=self.args.approx_scheme, p=2)
             if "G_NL" in model.losses:
+                # Calculates the error in nonlinearity of each trajectory between prediction and ground truth
                 non_linear_loss = nonlinear_loss()
             if "G_MSE" in model.losses:
+                # Customized Mean S error
                 customized_MSE = own_MSE(S=2)
-            # Create new loss for fine grouped nonlinear trajectories
-            if self.args.nl_fine:
-                if phase == "test":
-                    print("Analyze trajectories in classify them in fine groups...")
-                    nonlinear_trajectories_dict = {}
-                    for N in range(0,11):
-                        nonlinear_trajectories_dict[N] = ADE_nl_Trajectories_fine(args=self.args, p=2)
 
-            # Create new loss for coarse grouped nonlinear trajectories
-            if self.args.nl_coarse:
+            # Create new ADE and FDE for trajectories that are classified with respect to their degree of nonlinearity
+            if self.args.nl_classified:
                 if phase == "test":
                     print("Analyze trajectories in classify them in coarse groups...")
-                    groups = ["strictly_linear", "linear", "med_nonlinear", "highly_nonlinear", "other"]
-                    nonlinear_trajectories_dict_coarse = {}
+                    groups = ["strictly_linear", "linear", "gradually_nonlinear", "highly_nonlinear", "other"]
+                    classified_trajectories_dict = {}
                     for group in groups:
-                        nonlinear_trajectories_dict_coarse[group] = ADE_nl_Trajectories_coarse(args=self.args, p=2, group=group)
-
-
+                        classified_trajectories_dict[group] = nl_loss_classified_Trajectories(args=self.args, p=2, group=group)
 
             if phase == "train":
                 model.train()
@@ -100,6 +105,7 @@ class Solver(object):
                 raise ValueError("Specify phase either train or test!" )
 
             for i, batch in enumerate(train_loader, 1):
+                # Get data from TrainLoader
                 in_xy, gt_xy = batch["in_xy"].to(device), batch["gt_xy"].to(device)
                 in_dxdy = batch["in_dxdy"].to(device)
 
@@ -124,6 +130,7 @@ class Solver(object):
 
                 targets = {"gt_xy": gt_xy}
 
+                # Get prediction of model
                 self.optim.zero_grad()
                 outputs = model(inputs)
 
@@ -150,14 +157,13 @@ class Solver(object):
                 if "G_MSE" in model.losses:
                     if "G_MSE" not in self.loss_history_all[self.dataset_name][phase].keys():
                         self.loss_history_all[self.dataset_name][phase]["G_MSE"] = []
-                    #loss_MSE = self.loss_func(outputs["out_xy"], targets["gt_xy"])
                     loss_MSE = customized_MSE(outputs["out_xy"], targets["gt_xy"])
 
-                # additional loss based distances between peds in scene
+                # Additional losses
                 if "G_distance_loss" in model.losses:
                     if "G_distance_loss" not in self.loss_history_all[self.dataset_name][phase].keys():
                         self.loss_history_all[self.dataset_name][phase]["G_distance_loss"] = []
-                    loss_dist = distance_loss.calc_distance_loss(outputs["out_xy_all"].to(device), batch["gt_xy"].to(device), batch["seq_start_end"], batch["pred_check"], batch["pad_mask"])
+                    loss_dist = distance_loss.calc_distance_loss(outputs["out_xy_all"].to(device), batch["gt_xy"].to(device), batch["seq_start_end"], batch["pad_mask"], self.args)
 
                 if "G_ADE_nl_regions" in model.losses:
                     if "G_ADE_nl_regions" not in self.loss_history_all[self.dataset_name][phase].keys():
@@ -169,19 +175,14 @@ class Solver(object):
                         self.loss_history_all[self.dataset_name][phase]["G_NL"] = []
                     nl_loss = non_linear_loss(outputs["out_xy"], targets["gt_xy"])
 
-                # Create new loss for grouped nonlinear trajectories
-                if self.args.nl_fine:
-                    if phase == "test":
-                        for N in nonlinear_trajectories_dict:
-                            nonlinear_ADE_trajectories_fine = nonlinear_trajectories_dict[N](outputs["out_xy"], targets["gt_xy"], N)
-
-                if self.args.nl_coarse:
+                # Loss for classified trajectories
+                if self.args.nl_classified:
                     if phase == "test":
                         for group in groups:
-                            nonlinear_ADE_trajectories_coarse = nonlinear_trajectories_dict_coarse[group](outputs["out_xy"], targets["gt_xy"])
+                            loss_classified_trajectories = classified_trajectories_dict[group](outputs["out_xy"], targets["gt_xy"])
 
 
-                # Backprop for training with L2 loss
+                # Backprop for training according to train loss
                 if phase == "train":
                     if self.args.train_loss == "ADE":
                         L2_batch_loss.backward()
@@ -200,32 +201,27 @@ class Solver(object):
                     self.optim.step()
 
                     if self.args.plot_gradient_flow:
+                        # Plot flow of gradients in order to detect vanishing gradients
                         if epoch%50 == 0 or epoch == num_epochs-1:
                             plot_grad_flow(model.named_parameters(), self.server, self.args, epoch)
 
-                # Calculate distances to surrounding pedestrians
+                # Calculate distances to surrounding pedestrians for collision avoidance behavior
                 if phase == "test":
-                    if self.args.histo:
+                    if self.args.analyse_coll_avoidance:
                         if "seq_start_end" in batch.keys():
-                            print("calculating distances...")
-                            self.distances_targets = np.concatenate((self.distances_targets, calculate_distance(batch["gt_xy"], batch["seq_start_end"], batch["pred_check"], batch["pad_mask"], self.args)), axis=0)
-                            self.distances_outputs = np.concatenate((self.distances_outputs, calculate_distance(outputs["out_xy_all"].detach().cpu().numpy(), batch["seq_start_end"], batch["pred_check"], batch["pad_mask"], self.args)), axis=0)
+                            print("Calculating distances between pedestrians for each scene...")
+                            self.distances_targets = np.concatenate((self.distances_targets, calculate_distance(batch["gt_xy"], batch["seq_start_end"], batch["pad_mask"], self.args)), axis=0)
+                            self.distances_outputs = np.concatenate((self.distances_outputs, calculate_distance(outputs["out_xy_all"].detach().cpu().numpy(), batch["seq_start_end"], batch["pad_mask"], self.args)), axis=0)
 
-                # Note MSE for averaging over batch later
-                #self.loss_history.append(loss_MSE.detach().cpu().numpy())
-
-                # Plot last 5 epochs
+                # Plot predictions
                 if self.show_traj:
                     if self.args.socialforce:
                         if phase=="test":
-                            plot_traj_for_social_exp(batch, outputs, phase, train_epoch, i, model_type, self.server, self.args)
+                            plot_predictions(batch, outputs, phase, train_epoch, i, model_type, self.server, self.args)
                     else:
-                        if epoch >= num_epochs-5 and (phase=="train" or phase=="test"):
-                            visualize = True
-                            train_epoch = epoch
-                        if visualize:
-                            if phase == "train" or phase == "test":
-                                create_visualization(batch, outputs, phase, train_epoch, i, model_type, self.server)
+                        if phase == "test":
+                            plot_predictions(batch, outputs, phase, train_epoch, i, model_type, self.server, self.args)
+
 
             # Calculate losses for Epoch
             if "G_ADE" in model.losses:
@@ -243,53 +239,29 @@ class Solver(object):
             if "G_ADE_nl_regions" in model.losses:
                 self.loss_history_all[self.dataset_name][str(phase)]["G_ADE_nl_regions"].append(ADE_nl.loss_epoch().detach().cpu().numpy())
 
-            # Create new loss for fine grouped nonlinear trajectories
-            if self.args.nl_fine:
+
+            # Calculate loss for trajectory-groups that are classified according to their degree of nonlinearity
+            if self.args.nl_classified:
                 if phase == "test":
-                    loss_dict = {}
-                    for N in nonlinear_trajectories_dict:
-                        loss_dict[N] = {}
-                        loss_dict[N]["ADE_nonlinear"] = nonlinear_trajectories_dict[N].loss_epoch().detach().cpu().numpy()
-                        loss_dict[N]["nr_traj"] = nonlinear_trajectories_dict[N].num_trajectories
+                    loss_dict_classified = {}
+                    for group in classified_trajectories_dict:
+                        loss_dict_classified[group] = {}
+                        loss_dict_classified[group]["ADE_nonlinear"] = classified_trajectories_dict[group].loss_epoch().detach().cpu().numpy()
+                        loss_dict_classified[group]["FDE_nonlinear"] = classified_trajectories_dict[group].FDE_loss_epoch().detach().cpu().numpy()
+                        loss_dict_classified[group]["nr_traj"] = classified_trajectories_dict[group].num_trajectories
+                        loss_dict_classified[group]["total_nr_traj"] = classified_trajectories_dict[group].total_num_trajectories
+
+                    # Write calculated losses for model and dataset in .xlsx-file for further analysis
+                    path = os.path.join(self.root_path, "Analyse_Results", "ClassLoss", self.args.dataset_name)
+                    loss_on_traj_class(path, self.args, loss_dict_classified)
 
 
-                    path = "Analyse_Results//Nonlinear_loss//Classified_Trajectories//Fine//" + self.args.dataset_name
-                    loss_nonlinear_trajectories(path, self.args, loss_dict)
-
-            # Create new loss for fine grouped nonlinear trajectories
-            if self.args.nl_coarse:
-                if phase == "test":
-                    loss_dict_coarse = {}
-                    for group in nonlinear_trajectories_dict_coarse:
-                        loss_dict_coarse[group] = {}
-                        loss_dict_coarse[group]["ADE_nonlinear"] = nonlinear_trajectories_dict_coarse[group].loss_epoch().detach().cpu().numpy()
-                        loss_dict_coarse[group]["FDE_nonlinear"] = nonlinear_trajectories_dict_coarse[group].FDE_loss_epoch().detach().cpu().numpy()
-                        loss_dict_coarse[group]["nr_traj"] = nonlinear_trajectories_dict_coarse[group].num_trajectories
-                        loss_dict_coarse[group]["total_nr_traj"] = nonlinear_trajectories_dict_coarse[group].total_num_trajectories
-
-                    path = "Analyse_Results//Nonlinear_loss//Classified_Trajectories//Coarse//" + self.args.dataset_name
-                    loss_nonlinear_trajectories_coarse(path, self.args, loss_dict_coarse)
-
-
-            # Add MSE
-            #batch_size_losses = self.loss_history[-len(train_loader):]
-            #MSE_loss = np.mean(batch_size_losses)
-            #self.loss_history_all[self.dataset_name][str(phase)]["MSE"].append(MSE_loss)
-
-            # adjust threshold according to mean curvature for training
+            # Adjust threshold according to mean curvature for training on loss ADE_nl
             if phase == "train" and (self.args.train_loss == "mixed" or self.args.train_loss == "ADE_nl") and "G_ADE_nl_regions" in model.losses and epoch == 0:
                 self.histo_curvatues = ADE_nl.get_curvatures()
                 self.args.threshold = self.histo_curvatues.mean()
 
-            # Check for validation loss to be lowest
-            if phase == "val":
-                L2_loss = L2_loss.loss_epoch().detach().cpu().numpy()
-                if L2_loss < self.best_val:
-                    self.best_val = L2_loss
-                    self.best_val_FDE = FDE_loss.loss_epoch().detach().cpu().numpy()
-                    self.best_val_epoch = train_epoch+1
-
-            # Create histogram for curvatures
+            # Create histogram for curvatures-values of trajectories
             if phase == "test" and "G_ADE_nl_regions" in model.losses and epoch == 0:
                 print("Create histogram for curvature values in dataset.")
                 self.histo_curvatues = ADE_nl.get_curvatures()
@@ -297,22 +269,28 @@ class Solver(object):
                 hist = create_histogram(args=self.args, server=self.server)
                 hist.plot_histogram_curvatures(self.histo_curvatues, bins)
 
+            # Note lowest validation error
+            if phase == "val":
+                L2_loss = L2_loss.loss_epoch().detach().cpu().numpy()
+                if L2_loss < self.best_val:
+                    self.best_val = L2_loss
+                    self.best_val_FDE = FDE_loss.loss_epoch().detach().cpu().numpy()
+                    self.best_val_epoch = train_epoch+1
+
             # Print Epoch loss
             if log_nth:
                 print('[Epoch %d/%d] ' %(epoch + 1, num_epochs) + str(phase) + ' loss: %.3f' % (self.loss_history_all[self.dataset_name][str(phase)]["G_ADE"][-1]))
-                #print('[Epoch %d/%d] nonlinear_loss: ' % (epoch + 1, num_epochs) + str(phase) + ' loss: %.3f' % (self.loss_history_all[self.dataset_name][str(phase)]["G_NL"][-1]))
-
 
             # Validation
             if phase == "train":
                 self.train(model, model_type, val_loader, val_loader, log_nth = log_nth, num_epochs=1, phase="val", visualize=visualize, train_epoch = epoch)
 
         if phase == "test":
-            if self.args.histo:
+            if self.args.analyse_coll_avoidance:
                 self.histo_distances_targets = np.histogram(self.distances_targets, np.arange(0, 30.1, 0.1))
                 self.histo_distances_outputs = np.histogram(self.distances_outputs, np.arange(0, 30.1, 0.1))
 
-        if phase != "val":
+        if phase == "train":
             self.last_epoch += num_epochs
             print("finish")
 
