@@ -6,7 +6,8 @@
 #SBATCH --mail-type=all
 #SBATCH --output=slurm/slurm-%j.out
 
-#eval "python  $@";
+# Example bash-script to run Experiment with Vanilla LSTM Model on real dataset zara1
+# eval "python  $@";
 
-eval "python main/Experiment_Control.py --dataset_name eth --dataset_type real --model_type lstm --lstm_pool False --args_set lstm --num_epochs 500 --data_augmentation true --phase train --socialforce false --neighborhood_size 10 --grid_size 10 --plot_name lstm --analyse_real_dataset False --padding True --final_position False --show_traj False --histo false --nl_coarse False --visualize_classified False";
+eval "python main/Experiment_Control.py --dataset_name zara1 --dataset_type real --socialforce false --model_type lstm --lstm_pool False --args_set lstm --phase test --num_epochs 250 --padding True --final_position False --show_traj True --visdom false --analyse_coll_avoidance false --nl_classified False --visualize_classified False";
 
