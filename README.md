@@ -14,9 +14,13 @@ individuals. Furthermore, we introduce evaluation metrics that go beyond the com
 
 Below we show trajectories of pedestrians that socially interact with each other. We see that the Vanilla LSTM Model mainly predicts linear trajectories and is not capable of predicting the social interactions between pedestrians. In comparison, we observe that the Social LSTM Model is able to predict the interactions between pedestrians. 
 
+<br />
+
 ![Vanilla LSTM Model Predictions](<Experiments/ReadMeSupport/Qualitative_Analysis/Vanilla_LSTM_Model_Predictions.PNG>) | ![Weak Social Interactions](<Experiments/ReadMeSupport/Qualitative_Analysis/Social_LSTM_Model_Predictions.PNG>) 
 :-------------------------:|:-------------------------:
 Predicted trajectories of the Vanilla LSTM Model | Predicted Trajectories of the Social LSTM Model [[1]](#1)
+
+<br />
 
 If you find this code useful for your research, please cite it as: 
 
@@ -25,7 +29,7 @@ If you find this code useful for your research, please cite it as:
     author = {Philipp Mondorf},
     title = {Modeling Social Interactions for Pedestrian Trajectory Prediction on Real and Synthetic Datasets}, 
     school = {Technical University of Munich},
-    year = 2020, 
+    year = {2020}, 
     type = {B.Sc. Thesis}
 }
 ```
@@ -54,13 +58,13 @@ There exists a variety of publicly available datasets of real-world human trajec
 <img src= "Experiments/ReadMeSupport/Real_Datasets/ETH_UCY_Datasets.PNG" width = "" height = "">
 
 ### Synthetic Datasets
-For further information about how to generate hand-tailored datasets that focus on the interactions between pedestrians go to [Generate_Datasets](Generate_Datasets).
+Instructions for generating hand-tailored datasets that focus on the interactions between pedestrians can be found under [Generate_Datasets](Generate_Datasets).
 
-<img src= "Generate_Datasets/ReadMeSupport/PedPed_Animations/V01b0u2171.PNG" width = "400" height = "">
-<img src= "Generate_Datasets/ReadMeSupport/PedPed_Animations/V03b1u4427.PNG" width = "400" height = "">
+<img src= "Generate_Datasets/ReadMeSupport/PedPed_Animations/V01b0u2171.PNG" width = "380" height = "">
+<img src= "Generate_Datasets/ReadMeSupport/PedPed_Animations/V03b1u4427.PNG" width = "380" height = "">
 
 ## Experiments
-For further information about how to train and evaluate different trajectory prediction models on real and synthetic datasets, go to [Experiments](Experiments).
+Instructions for training and evaluating different trajectory prediction models on real and synthetic datasets can be found under [Experiments](Experiments).
 
 ## References
 <a id="1">[1]</a>  A. Alahi, K. Goel, V. Ramanathan, A. Robicquet, L. Fei-Fei, and S. Savarese: “Social LSTM: Human Trajectory Prediction in Crowded Space”. In: *CVPR* (2016), pp. 961–971.
