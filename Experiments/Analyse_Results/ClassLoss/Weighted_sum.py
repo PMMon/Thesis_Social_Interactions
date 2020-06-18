@@ -260,7 +260,7 @@ if __name__ == "__main__":
     # Get arguments
     args = parser.parse_args()
 
-    V0_values = np.array([4])
+    V0_values = np.array([0, 1, 2, 4, 6])
     sigma_values = np.array([0.2171, 0.4343, 0.8686, 1.303, 1.7371, 2.171, 2.6058])
 
     rating = rate_datasets(args)
