@@ -7,7 +7,7 @@ from Implementations import PedPedScene
 # ======================================================= Description =======================================================
 # Main Script to generate synthetic datasets that focus on the interactions between pedestrians with the Social Force model.
 # The dataset excludes Human-Space interactions, i.e. interactions between pedestrians and their physical environment (obstacles).
-# In order to include Human-Space interactions, run the Script GenPedSpaceScene.py in this folder.
+# In order to include Human-Space interactions run the Script GenPedSpaceScene.py in this folder.
 #
 # If the argument --run_list is set to true, datasets for different combinations of V0 and sigma, specified by
 # V0_list and sigma_list, are created. Otherwise one single dataset with --V0 and --sigma is created.

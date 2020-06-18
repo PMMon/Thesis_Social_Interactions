@@ -5,7 +5,7 @@ from Implementations.PedSpaceScene import PedSpace_Interactions
 
 # ======================================================= Description =======================================================
 # Main Script to generate synthetic datasets that incorporates interactions between pedestrians and obstacles, i.e. Human-Space interactions.
-# In order to exclude Human-Space interactions and to particularly focus on Human-Human interactions (social interactions),
+# In order to exclude Human-Space interactions and to particularly focus on Human-Human interactions (social interactions)
 # run the Script GenPedPedScene.py in this folder.
 #
 # If the argument --run_list is set to true, datasets for different combinations of V0 and sigma, specified by
