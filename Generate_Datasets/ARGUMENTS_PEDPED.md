@@ -51,6 +51,6 @@ The Social Force Model by D. Helbing and P. Molnár (1995) is used to generate a
 It is also possible to view animations/images created during the generation process via the `visdom module`. The following flags control this process: 
 
 * `--visdom`: Determines whether to show animations/videos in visdom. Default is `False`.
-* `--viz_port`: Specifies port number for visdom connection. Default is 8098. 
+* `--viz_port`: Specifies port number for visdom connection. Default is 8090. 
 * `--viz_server`: Specifies server name for visdom connection. Default is `""`. 
 * `--viz_env`: Specifies name of visdom environment. Default is 'Socialforce_PedPedScene'.
