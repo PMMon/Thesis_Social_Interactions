@@ -471,7 +471,7 @@ if __name__ == "__main__":
     parser.add_argument("--plot_gradient_flow", default=False, type=bool_flag, help="Specify whether or not to plot values of gradients for monitoring possible vanishing gradients")
     parser.add_argument("--analyse_real_dataset", default=False, type=bool_flag, help="Specify whether to analyse real dataset with respect to the amount of suitable trajectories in the dataset")
 
-    # Configs for visdom-module
+    # Configs for visdom module
     parser.add_argument("--visdom", default=False, type=bool_flag, help="Specify whether or not to plot via visdom")
     parser.add_argument("--viz_port", default=8090, type=int, help="Specify port for visdom")
     parser.add_argument("--viz_server", default="", type=str, help="Specify server for visdom")
