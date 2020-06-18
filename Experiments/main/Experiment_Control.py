@@ -456,7 +456,7 @@ if __name__ == "__main__":
     parser.add_argument("--emb_dim", default=32, type=int, help="Specify dimension of embedding")
     parser.add_argument("--num_epochs", default=250, type=int, help="Specify number of epochs")
     parser.add_argument("--dropout", default=0.0, type=float, help="Specify dropout rate")
-    parser.add_argument("--num_layers", default=1, type=int, help="Specify number of layers of LSTM/Social LSTM Model")
+    parser.add_argument("--num_layers", default=1, type=int, help="Specify number of layers of Vanilla/Social LSTM Model")
     parser.add_argument("--optim", default="Adam", type=str, help="Specify optimizer. Choose either: adam, rmsprop or sgd")
 
     # Configs for additional tools for analysis
