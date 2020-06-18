@@ -415,7 +415,7 @@ if __name__ == "__main__":
     parser.add_argument("--socialforce", default=False, type=bool_flag, help="Specify whether to run experiment on synthetic data that is created by the Social Force Model")
     parser.add_argument("--phase", default="train", type=str, help="Specify whether to train (and validate) or test your model")
     parser.add_argument("--show_traj", default=False, type=bool_flag, help="Specify whether to plot predicted trajectories")
-    parser.add_argument("--log_nth", default=50, type=int, help="Define when to log training/validation losses")
+    parser.add_argument("--log_nth", default=1, type=int, help="Define when to log training/validation losses")
     parser.add_argument("--config", default=1, type=int, help="Specify config-file")
     parser.add_argument("--log", default="", type=str, help="Specify log-level. Choose either: Info, Debug, Error, Critical or leave unspecified")
 
@@ -425,7 +425,7 @@ if __name__ == "__main__":
 
     # Configs for Model
     parser.add_argument("--model_name", default="", type=str, help="Define model name for saving")
-    parser.add_argument("--model_type", default="to_be_defined", type=str,help="Define type of model. Choose either: linear, lstm or social-lstm")
+    parser.add_argument("--model_type", default="lstm", type=str,help="Define type of model. Choose either: linear, lstm or social-lstm")
     parser.add_argument("--save_model", default=True, type=bool_flag, help="Save trained model")
     parser.add_argument("--load_model", default=False, type=bool_flag, help="Specify whether to load existing model")
     parser.add_argument("--lstm_pool", default=False, type=bool_flag, help="Specify whether to enable social pooling")
@@ -449,7 +449,7 @@ if __name__ == "__main__":
 
     # Configs for training, val, testing
     parser.add_argument("--batch_size", default=32, type=int, help="Specify batch size")
-    parser.add_argument("--wd", default=0.03, type=float, help="Specify weight decay")
+    parser.add_argument("--wd", default=0.0, type=float, help="Specify weight decay")
     parser.add_argument("--lr", default=0.001, type=float, help="Specify learning rate")
     parser.add_argument("--encoder_h_dim", default=64, type=int, help="Specify hidden state dimension h of encoder")
     parser.add_argument("--decoder_h_dim", default=32, type=int, help="Specify hidden state dimension h of decoder")
@@ -472,11 +472,9 @@ if __name__ == "__main__":
     parser.add_argument("--analyse_real_dataset", default=False, type=bool_flag, help="Specify whether to analyse real dataset with respect to the amount of suitable trajectories in the dataset")
 
     # Configs for visdom-module
-    parser.add_argument("--visdom", default=True, type=bool_flag, help="Specify whether or not to plot via visdom plot loss in visdom")
-    parser.add_argument("--viz_port", default=8090, type=int, help="specify port for visdom")
-    parser.add_argument("--viz_server", default="", type=str, help="specify server for visdom")
-
-    # Configs for additional tools for analysis
+    parser.add_argument("--visdom", default=False, type=bool_flag, help="Specify whether or not to plot via visdom")
+    parser.add_argument("--viz_port", default=8090, type=int, help="Specify port for visdom")
+    parser.add_argument("--viz_server", default="", type=str, help="Specify server for visdom")
 
     # Get arguments
     args = parser.parse_args()
