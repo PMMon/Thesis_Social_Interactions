@@ -12,7 +12,7 @@ impact of social interactions on the motion of pedestrians. These hand-tailored 
 exclude interactions between pedestrians and obstacles and focus on the interactions between
 individuals. Furthermore, we introduce evaluation metrics that go beyond the commonly used average and final displacement error and focus on the interactions between pedestrians.
 
-Below we show trajectories of pedestrians that socially interact with each other. We see that the Vanilla LSTM Model mainly predicts linear trajectories and is not capable of predicting the social interactions between pedestrians. In comparison, we observe that the Social LSTM Model is able to predict the interactions between pedestrians. 
+Below we show trajectories of pedestrians that socially interact with each other. We further compare the predictions of the Vanilla LSTM model (left) and the Social LSTM model (right). While the Vanilla LSTM Model mainly predicts linear trajectories and ignores the interactions between neighboring pedestrians, we can see that the Social LSTM Model predicts social interactions. These observations align with the quantitive evaluation of additional [experiments](Experiments) that were conducted on the two trajectory prediction models.
 
 <br />
 
@@ -35,11 +35,11 @@ If you find this code useful for your research, please cite it as:
 ```
 
 ## Setup
-All code was developed and tested on Ubuntu 18.04 with Python 3.6 and PyTorch 1.2.0. 
+All code was developed and tested on Ubuntu 18.04 with Python 3.6.2 and PyTorch 1.2.0. 
 
 To run the code, we recommend to setup a virtual environment: 
 
-```
+```bash
 python3 -m venv env                     # Create virtual environment
 source env/bin/activate                 # Activate virtual environment
 pip install -r requirements.txt         # Install dependencies
@@ -48,7 +48,7 @@ deactivate                              # Deactivate virtual environment
 ```
 
 ## Datasets 
-You can conduct experiments on datasets of real-world human motion behavior or on synthetic datasets that simulate human motion behavior using the Social Force Model [[2]](#2). 
+You can conduct experiments on datasets of real-world human motion behavior and on synthetic datasets that simulate human motion behavior using the Social Force Model [[2]](#2). 
 
 ### Real Datasets
 
