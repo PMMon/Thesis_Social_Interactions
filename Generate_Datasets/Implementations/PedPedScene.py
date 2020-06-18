@@ -357,7 +357,7 @@ if __name__ == "__main__":
     # Configs about Visdom
     parser.add_argument("--visdom", default=False, type=bool_flag, help="Specify whether plot loss in visdom")
     parser.add_argument("--viz_port", default=8098, type=int, help="Specify port for visdom")
-    parser.add_argument("--viz_server", default="http://atcremers10", type=str, help="Specify server for visdom")
+    parser.add_argument("--viz_server", default="", type=str, help="Specify server for visdom")
     parser.add_argument("--viz_env", default="Socialforce_PedPedScene", type=str, help="Specify environment name for visdom")
 
     parser.add_argument("--scene", default="hotel", type=str, help="Determine which scene to analyze")
