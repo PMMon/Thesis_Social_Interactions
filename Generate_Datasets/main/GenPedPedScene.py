@@ -1,4 +1,5 @@
 import argparse
+
 from helper.bool_flag import bool_flag
 from helper.connect2visdm import connect2visdom
 from Implementations import PedPedScene
@@ -53,7 +54,7 @@ parser.add_argument("--c", default=0.5, type=float, help="Specify out-of-view fa
 
 # Configs about Visdom
 parser.add_argument("--visdom", default=False, type=bool_flag, help="Specify whether show animations/videos in visdom")
-parser.add_argument("--viz_port", default=8098, type=int, help="Specify port for visdom")
+parser.add_argument("--viz_port", default=8090, type=int, help="Specify port for visdom")
 parser.add_argument("--viz_server", default="", type=str, help="Specify server for visdom")
 parser.add_argument("--viz_env", default="Socialforce_PedPedScene", type=str, help="Specify environment name for visdom")
 
@@ -69,8 +70,8 @@ else:
 if args.run_list:
 
     # For each unique combination of V0 and sigma a training, validation and testing set are created
-    V0_list = [0]
-    sigma_list = [0.2171]
+    V0_list = [0, 1, 2, 4, 6]
+    sigma_list = [0.2171, 0.4343, 0.8686, 1.303, 1.7371, 2.171, 2.6058]
 
     for V0 in V0_list:
         for sigma in sigma_list:

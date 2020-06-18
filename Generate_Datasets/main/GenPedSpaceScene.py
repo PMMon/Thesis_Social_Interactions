@@ -61,7 +61,7 @@ parser.add_argument("--scaling", default=0.05, type=float, help="Specify scaling
 
 # Configs about Visdom
 parser.add_argument("--visdom", default=False, type=bool_flag, help="specify whether show animations/images in visdom")
-parser.add_argument("--viz_port", default=8098, type=int, help="specify port for visdom")
+parser.add_argument("--viz_port", default=8090, type=int, help="specify port for visdom")
 parser.add_argument("--viz_server", default="", type=str, help="specify server for visdom")
 parser.add_argument("--viz_env", default="Socialforce_PedSpaceScene", type=str, help="Specify environment name for visdom")
 
