@@ -82,7 +82,7 @@ The plots are saved under <code>Analyse_Results/Overall_Loss/*modeltype*</code>.
 
 ### Average Nonlinear Displacement Error
 
-<img src= "ReadMeSupport/Nonlinear_ADE/nonlinear_ADE.PNG" width = "600" height = "450"> 
+<img src= "ReadMeSupport/Nonlinear_ADE/nonlinear_ADE.PNG" width = "480" height = "350"> 
 
 
 We evaluate the ADE of a model in specific nonlinear regions of the predicted trajectories. This average nonlinear displacement error allows us to analyze the performance of a model on movements that are especially influenced by social interactions. To identify these nonlinear regions, we define a threshold `td` that excludes all points of a trajectory for which the curvature is below the threshold value. To evaluate the  average nonlinear displacement error of your Vanila LSTM model on a dataset that was created with values `V0 = 4` and `sigma = 1.303` run the following script: 
@@ -127,7 +127,7 @@ The flag `--distr` specifies whether to additionally create a plot that shows th
 
 ### Collision Behavior
 
-<img src= "ReadMeSupport/Collision_behavior/CDF_V06b1u303.PNG" width = "410" height = "310"> 
+<img src= "ReadMeSupport/Collision_behavior/CDF_V06b1u303.PNG" width = "460" height = "330"> 
 
 Models that are capable of learning social interactions should predict collision behavior of pedestrians that is close to that of the given dataset. To evaluate the collision behavior of the pedestrians in a dataset and the respective predictions, set the flag `--analyse_coll_avoidance` to `True`. If you want to create a plot that shows the CDF for the euclidean distances between pedestrians in a dataset additionally set the flag `--CDF_CollAvoid` to `True`. For example, run the following code: 
 
