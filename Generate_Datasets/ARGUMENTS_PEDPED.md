@@ -40,10 +40,8 @@ The Social Force Model by D. Helbing and P. Molnár (1995) is used to generate a
 * `--sigma`: Specifies the range of the repulsive potential between pedestrians. Default is 1.303.
 * `--U0`: Specifies the magnitude of the repulsive potential between pedestrians and obstacles. Default is 2.
 * `--r`: Specifies the range of the repulsive potential between pedestrians and obstacles. Default is 0.4343.
-
 * `--tau`: Specifies relaxation time. Default is 0.5 seconds. 
 * `--beta`: Determines the ratio to which extent social forces are exerted parallel and orthogonal to the direction of movement of a pedestrian. Set 1 for only parallel contributions. Default is 1.
-
 * `--delta_t`: Specifies the time step size. Default is 0.4 seconds.
 * `--twophi`: Angle that specifies the field of view 2*phi. Default is 200. 
 * `--c`: Specifies out-of-view factor. Default is 0.5. 
