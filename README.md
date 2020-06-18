@@ -12,7 +12,7 @@ impact of social interactions on the motion of pedestrians. These hand-tailored 
 exclude interactions between pedestrians and obstacles and focus on the interactions between
 individuals. Furthermore, we introduce evaluation metrics that go beyond the commonly used average and final displacement error and focus on the interactions between pedestrians.
 
-Below we show trajectories of pedestrians that socially interact with each other. We further compare the predictions of the Vanilla LSTM model (left) and the Social LSTM model (right). While the Vanilla LSTM Model mainly predicts linear trajectories and ignores the interactions between neighboring pedestrians, we can see that the Social LSTM Model predicts social interactions. These observations align with the quantitive evaluation of additional [experiments](Experiments) that were conducted on the two trajectory prediction models.
+Below we show trajectories of pedestrians that socially interact with each other. We further compare the predictions of the Vanilla LSTM model (left) and the Social LSTM model (right). While the Vanilla LSTM model mainly predicts linear trajectories and ignores the interactions between neighboring pedestrians, we can see that the Social LSTM model predicts social interactions. These observations align with the quantitive evaluation of additional [experiments](Experiments) that were conducted on the two trajectory prediction models.
 
 <br />
 
