@@ -104,7 +104,9 @@ class LSTM(BaseModel):
         self.final_position = args.final_position
 
         # Specify losses for model: Average Displacement Error (ADE), Final Displacement Error (FDE) and the average of these two losses (AV)
-        self.losses.extend(["G_L2",  "G_ADE", "G_FDE", "G_AV", "G_ADE_nl_regions"])
+        self.losses.extend(["G_L2",  "G_ADE", "G_FDE", "G_AV"])
+        if args.nl_ADE:
+            self.losses.extend(["G_ADE_nl_regions"])
 
         self.encoder = Encoder(
             encoder_h_dim=self.encoder_h_dim,
