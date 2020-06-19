@@ -1,5 +1,6 @@
 import torch
-from solver.visualize_trajectories import visualize_classified_trajectories
+
+from .visualize_trajectories import visualize_classified_trajectories
 
 # ======================================= Description ===========================================
 # Below you will find classes for various customized losses:

@@ -2,6 +2,8 @@ import torch
 import platform
 import numpy as np
 import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
 from solver.losses import L2, FDE, Scene_distances, ADE_nl_regions, nonlinear_loss, own_MSE, nl_loss_classified_Trajectories
 from solver.visualize_trajectories import plot_predictions, plot_predictions_background_img
