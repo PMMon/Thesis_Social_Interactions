@@ -1,3 +1,5 @@
+import os, sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 from torch.utils.data import DataLoader
 from data.trajectories import TrajectoryDataset, seq_collate
 from data.trajectories_scene import TrajectoryDatasetEval, seq_collate_eval

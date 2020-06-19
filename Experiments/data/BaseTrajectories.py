@@ -1,5 +1,6 @@
 import os, sys
 sys.path.append(os.getcwd())
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 import logging
 import pandas as pd
 import numpy as np
