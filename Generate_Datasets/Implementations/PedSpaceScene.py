@@ -12,6 +12,8 @@ from os import strerror
 import errno
 import socket
 import visdom
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
 from Implementations.Scenarios import generate_scene
 from helper.bool_flag import bool_flag
