@@ -1,4 +1,7 @@
 import argparse
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
 from helper.bool_flag import bool_flag
 from Implementations.PedSpaceScene import PedSpace_Interactions
