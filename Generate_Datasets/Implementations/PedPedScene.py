@@ -8,6 +8,8 @@ import numpy as np
 import os
 from os import strerror
 import errno
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
 import socialforce
 from Implementations.Scenarios import generate_scene
