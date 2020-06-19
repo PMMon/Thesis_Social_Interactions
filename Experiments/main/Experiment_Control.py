@@ -3,12 +3,13 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import argparse
-import os
+import os, sys
 import logging
 import torch
 import visdom
 import numpy as np
 import socket
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
 from data.loader import data_loader
 from configs.config_dataprep import config as config_dataprep
