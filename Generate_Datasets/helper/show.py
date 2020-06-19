@@ -1,8 +1,6 @@
 import matplotlib
 matplotlib.use('Agg')
 from contextlib import contextmanager
-import socket
-import visdom
 import skvideo.io
 
 try:
