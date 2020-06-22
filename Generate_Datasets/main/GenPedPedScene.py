@@ -44,7 +44,7 @@ parser.add_argument("--nr_agents", default=14, type=int, help="Specify number of
 parser.add_argument("--v_max", default=1.2, type=float, help="Specify v_max")
 parser.add_argument("--v_min", default=0.4, type=float, help="Specify v_min")
 
-# Configs for Potential and Forces
+# Configs for Potentials and Forces
 parser.add_argument("--V0", default=2, type=int, help="Specify V0 of PedPedPotential")
 parser.add_argument("--sigma", default=1.303, type=float, help="Specify sigma of PedPedPotential")
 parser.add_argument("--U0", default=2, type=int, help="Specify magnitude U0 of agent-obstacle potential")
