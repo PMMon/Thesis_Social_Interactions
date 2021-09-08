@@ -7,4 +7,4 @@ pandas==0.25.1
 imutils==0.5.3
 sk_video==1.1.10
 Shapely==1.6.4.post2
-Pillow==7.1.2
+Pillow==8.3.2
