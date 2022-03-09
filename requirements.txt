@@ -1,7 +1,7 @@
 visdom==0.1.8.3
 opencv_python==4.2.0.32
 torch==1.2.0
-numpy==1.17.2
+numpy==1.21.0
 matplotlib==2.2.2
 pandas==0.25.1
 imutils==0.5.3
