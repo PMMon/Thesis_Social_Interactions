@@ -1,5 +1,5 @@
 visdom==0.1.8.3
-opencv_python==3.4.1.15
+opencv_python==4.2.0.32
 torch==1.2.0
 numpy==1.17.2
 matplotlib==2.2.2
